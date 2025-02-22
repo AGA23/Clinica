@@ -20,13 +20,14 @@ class DoctoresM extends ConexionBD {
             return true;
         }
 
-        $pdo->close();
-        $pdo = null;
+        return false;
     }
 
     // Mostrar Doctores
     static public function VerDoctoresM($tablaBD, $columna, $valor) {
-        if ($columna != null) {
+        $valid_columns = ['id', 'apellido', 'nombre', 'sexo', 'id_consultorio', 'usuario', 'rol']; // Columnas válidas
+
+        if ($columna != null && in_array($columna, $valid_columns)) {
             $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD WHERE $columna = :$columna");
             $pdo->bindParam(":".$columna, $valor, PDO::PARAM_STR);
             $pdo->execute();
@@ -36,22 +37,18 @@ class DoctoresM extends ConexionBD {
             $pdo->execute();
             return $pdo->fetchAll();
         }
-
-        $pdo->close();
-        $pdo = null;
     }
 
     // Editar Doctor
     static public function DoctorM($tablaBD, $columna, $valor) {
-        if ($columna != null) {
+        $valid_columns = ['id', 'apellido', 'nombre', 'sexo', 'usuario']; // Columnas válidas
+        if ($columna != null && in_array($columna, $valid_columns)) {
             $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD WHERE $columna = :$columna");
             $pdo->bindParam(":".$columna, $valor, PDO::PARAM_STR);
             $pdo->execute();
             return $pdo->fetch();
         }
-
-        $pdo->close();
-        $pdo = null;
+        return false;
     }
 
     // Actualizar Doctores
@@ -69,8 +66,7 @@ class DoctoresM extends ConexionBD {
             return true;
         }
 
-        $pdo->close();
-        $pdo = null;
+        return false;
     }
 
     // Eliminar Doctor
@@ -82,8 +78,7 @@ class DoctoresM extends ConexionBD {
             return true;
         }
 
-        $pdo->close();
-        $pdo = null;
+        return false;
     }
 
     // Iniciar sesión doctor
@@ -92,8 +87,6 @@ class DoctoresM extends ConexionBD {
         $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
         $pdo->execute();
         return $pdo->fetch();
-        $pdo->close();
-        $pdo = null;
     }
 
     // Ver Perfil Doctor
@@ -102,8 +95,6 @@ class DoctoresM extends ConexionBD {
         $pdo->bindParam(":id", $id, PDO::PARAM_STR);
         $pdo->execute();
         return $pdo->fetch();
-        $pdo->close();
-        $pdo = null;
     }
 
     // Actualizar Perfil Doctor
@@ -124,8 +115,7 @@ class DoctoresM extends ConexionBD {
             return true;
         }
 
-        $pdo->close();
-        $pdo = null;
+        return false;
     }
 }
 ?>

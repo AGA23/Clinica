@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 if ($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Administrador") {
     echo '<script> window.location = "inicio"; </script>';
     return;

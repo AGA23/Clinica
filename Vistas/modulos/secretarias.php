@@ -1,6 +1,6 @@
 <?php
 
-if($_SESSION["rol"] != "Administrador"){
+if ($_SESSION["rol"] != "Administrador") {
 
 	echo '<script>
 
@@ -15,32 +15,33 @@ if($_SESSION["rol"] != "Administrador"){
 ?>
 
 <div class="content-wrapper">
-	
+
 	<section class="content-header">
-		
+
 		<h1>Gestor de Secretarias</h1>
 
 	</section>
 
 	<section class="content">
-		
+
 		<div class="box">
-			
+
 			<div class="box-header">
-				
-				<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#CrearSecretaria">Crear Secretaria</button>
-				
+
+				<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#CrearSecretaria">Crear
+					Secretaria</button>
+
 			</div>
 
 
 			<div class="box-body">
-				
+
 				<table class="table table-bordered table-hover table-striped dt-responsive DT">
-					
+
 					<thead>
-						
+
 						<tr>
-							
+
 							<th>N°</th>
 							<th>Apellido</th>
 							<th>Nombre</th>
@@ -60,32 +61,32 @@ if($_SESSION["rol"] != "Administrador"){
 						$resultado = SecretariasC::VerSecretariasC();
 
 						foreach ($resultado as $key => $value) {
-							
+
 							echo '<tr>
 							
-									<td>'.($key+1).'</td>
-									<td>'.$value["apellido"].'</td>
-									<td>'.$value["nombre"].'</td>';
+									<td>' . ($key + 1) . '</td>
+									<td>' . $value["apellido"] . '</td>
+									<td>' . $value["nombre"] . '</td>';
 
-									if($value["foto"] == ""){
+							if ($value["foto"] == "") {
 
-										echo '<td><img src="Vistas/img/defecto.png" width="40px"></td>';
+								echo '<td><img src="Vistas/img/defecto.png" width="40px"></td>';
 
-									}else{
+							} else {
 
-										echo '<td><img src="'.$value["foto"].'" width="40px"></td>';
+								echo '<td><img src="' . $value["foto"] . '" width="40px"></td>';
 
-									}
+							}
 
-									echo '<td>'.$value["usuario"].'</td>
+							echo '<td>' . $value["usuario"] . '</td>
 
-									<td>'.$value["clave"].'</td>
+									<td>' . $value["clave"] . '</td>
 
 									<td>
 										
 										<div class="btn-group">
 											
-											<button class="btn btn-danger EliminarSecretaria" Sid="'.$value["id"].'" imgS="'.$value["foto"].'"><i class="fa fa-times"></i> Borrar</button>
+											<button class="btn btn-danger EliminarSecretaria" Sid="' . $value["id"] . '" imgS="' . $value["foto"] . '"><i class="fa fa-times"></i> Borrar</button>
 											
 										</div>
 
@@ -113,19 +114,19 @@ if($_SESSION["rol"] != "Administrador"){
 
 
 <div class="modal fade" rol="dialog" id="CrearSecretaria">
-	
+
 	<div class="modal-dialog">
-		
+
 		<div class="modal-content">
-			
+
 			<form method="post" role="form">
-				
+
 				<div class="modal-body">
-					
+
 					<div class="box-body">
-						
+
 						<div class="form-group">
-							
+
 							<h2>Apellido:</h2>
 
 							<input type="text" class="form-control input-lg" name="apellido" required>
@@ -135,7 +136,7 @@ if($_SESSION["rol"] != "Administrador"){
 						</div>
 
 						<div class="form-group">
-							
+
 							<h2>Nombre:</h2>
 
 							<input type="text" class="form-control input-lg" name="nombre" required>
@@ -145,7 +146,7 @@ if($_SESSION["rol"] != "Administrador"){
 
 
 						<div class="form-group">
-							
+
 							<h2>Usuario:</h2>
 
 							<input type="text" class="form-control input-lg" name="usuario" required>
@@ -153,7 +154,7 @@ if($_SESSION["rol"] != "Administrador"){
 						</div>
 
 						<div class="form-group">
-							
+
 							<h2>Contraseña:</h2>
 
 							<input type="text" class="form-control input-lg" name="clave" required>
@@ -166,7 +167,7 @@ if($_SESSION["rol"] != "Administrador"){
 
 
 				<div class="modal-footer">
-					
+
 					<button type="submit" class="btn btn-primary">Crear</button>
 
 					<button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
@@ -176,7 +177,7 @@ if($_SESSION["rol"] != "Administrador"){
 				<?php
 
 				$crear = new SecretariasC();
-				$crear -> CrearSecretariaC();
+				$crear->CrearSecretariaC();
 
 				?>
 
@@ -193,4 +194,4 @@ if($_SESSION["rol"] != "Administrador"){
 <?php
 
 $borrarD = new SecretariasC();
-$borrarD -> BorrarSecretariaC();
+$borrarD->BorrarSecretariaC();

@@ -15,9 +15,10 @@ class SecretariasM extends ConexionBD {
             if ($pdo->execute()) {
                 // Si encuentra una fila, retorna los datos
                 if ($pdo->rowCount() > 0) {
-                    return $pdo->fetch();
+                    return $pdo->fetch(); // Si la consulta tiene resultados, retorna los datos
+                } else {
+                    return false; // No encontró el usuario o la clave no coincide
                 }
-                return false; // No encontró el usuario o la clave no coincide
             }
         } catch (PDOException $e) {
             // Manejar errores de conexión o consulta
@@ -34,13 +35,17 @@ class SecretariasM extends ConexionBD {
             $pdo->bindParam(":id", $id, PDO::PARAM_INT);
 
             if ($pdo->execute()) {
-                return $pdo->fetch();
+                if ($pdo->rowCount() > 0) {
+                    return $pdo->fetch(); // Si la consulta tiene resultados, retorna los datos
+                } else {
+                    return false; // No se encontró el perfil
+                }
             }
         } catch (PDOException $e) {
             echo "Error en la consulta: " . $e->getMessage();
         }
 
-        return false;
+        return false; // Si falla la ejecución
     }
 
     // Actualizar Perfil Secretaria
@@ -55,12 +60,12 @@ class SecretariasM extends ConexionBD {
             $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
             $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
             
-            return $pdo->execute();
+            return $pdo->execute(); // Retorna true si la actualización fue exitosa
         } catch (PDOException $e) {
             echo "Error en la consulta: " . $e->getMessage();
         }
 
-        return false;
+        return false; // Si falla la ejecución
     }
 
     // Mostrar Secretarias
@@ -69,7 +74,7 @@ class SecretariasM extends ConexionBD {
             $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD ORDER BY apellido ASC");
             
             if ($pdo->execute()) {
-                return $pdo->fetchAll();
+                return $pdo->fetchAll(); // Devuelve todos los resultados
             }
         } catch (PDOException $e) {
             echo "Error en la consulta: " . $e->getMessage();
@@ -89,12 +94,12 @@ class SecretariasM extends ConexionBD {
             $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
             $pdo->bindParam(":rol", $datosC["rol"], PDO::PARAM_STR);
             
-            return $pdo->execute();
+            return $pdo->execute(); // Retorna true si la inserción fue exitosa
         } catch (PDOException $e) {
             echo "Error en la consulta: " . $e->getMessage();
         }
 
-        return false;
+        return false; // Si falla la ejecución
     }
 
     // Borrar Secretarias
@@ -103,12 +108,12 @@ class SecretariasM extends ConexionBD {
             $pdo = ConexionBD::getInstancia()->prepare("DELETE FROM $tablaBD WHERE id = :id");
             $pdo->bindParam(":id", $id, PDO::PARAM_INT);
             
-            return $pdo->execute();
+            return $pdo->execute(); // Retorna true si la eliminación fue exitosa
         } catch (PDOException $e) {
             echo "Error en la consulta: " . $e->getMessage();
         }
 
-        return false;
+        return false; // Si falla la ejecución
     }
 }
 ?>

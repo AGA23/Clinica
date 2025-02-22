@@ -76,8 +76,6 @@ class DoctoresC{
 	}
 
 
-
-
 	//Borrar Doctor
 	public function BorrarDoctorC(){
 
@@ -122,8 +120,7 @@ class DoctoresC{
 
 				$resultado = DoctoresM::IngresarDoctorM($tablaBD, $datosC);
 
-				if($resultado["usuario"] == $_POST["usuario-Ing"] && $resultado["clave"] == $_POST["clave-Ing"]){
-
+				if($resultado && isset($resultado["usuario"]) && isset($resultado["clave"]) && $resultado["usuario"] == $_POST["usuario-Ing"] && $resultado["clave"] == $_POST["clave-Ing"]){
 
 					$_SESSION["Ingresar"] = true;
 
@@ -159,7 +156,8 @@ class DoctoresC{
 
 		$resultado = DoctoresM::VerPerfilDoctorM($tablaBD, $id);
 
-		echo '<tr>
+		if($resultado) {
+			echo '<tr>
 				
 				<td>'.$resultado["usuario"].'</td>
 				<td>'.$resultado["clave"].'</td>
@@ -201,9 +199,9 @@ class DoctoresC{
 				</td>
 
 			</tr>';
+		}
 
 	}
-
 
 
 	//Editar Perfil Doctor
@@ -214,7 +212,8 @@ class DoctoresC{
 
 		$resultado = DoctoresM::VerPerfilDoctorM($tablaBD, $id);
 
-		echo '<form method="post" enctype="multipart/form-data">
+		if($resultado) {
+			echo '<form method="post" enctype="multipart/form-data">
 					
 					<div class="row">
 						
@@ -233,7 +232,6 @@ class DoctoresC{
 							<h2>Contraseña:</h2>
 							<input type="text" class="input-lg" name="clavePerfil" value="'.$resultado["clave"].'">';
 
-
 				$columna = "id";
 				$valor = $resultado["id_consultorio"];
 
@@ -242,13 +240,13 @@ class DoctoresC{
 				echo '<h2>Consultorio Actual: '.$consultorio["nombre"].'</h2>
 					<h3>Cambiar Consultorio</h3>
 							<select class="input-lg" name="consultorioPerfil">';
-								
+
 							$columna = null;
 							$valor = null;
 
-							$consultorio = ConsultoriosC::VerConsultoriosC($columna, $valor);
+							$consultorios = ConsultoriosC::VerConsultoriosC($columna, $valor);
 
-							foreach ($consultorio as $key => $value) {
+							foreach ($consultorios as $key => $value) {
 								
 								echo '<option value="'.$value["id"].'">'.$value["nombre"].'</option>';
 
@@ -297,10 +295,9 @@ class DoctoresC{
 					</div>
 
 				</form>';
+		}
 
 	}
-
-
 
 
 	//Actualizar Perfil Doctor
