@@ -1,13 +1,67 @@
 <?php
-session_start();
-require_once __DIR__ . '/../Controladores/inicioC.php';
+// Habilitar reporte de errores
+error_reporting(E_ALL); // Reportar todos los errores
+ini_set('display_errors', 1); // Mostrar errores en pantalla
+ini_set('log_errors', 1); // Registrar errores en el archivo de log
+ini_set('error_log', __DIR__ . '/php_errors.log'); // Especificar la ruta del archivo de log
 
-// Verifica si la sesión está activa y muestra el estado
-if (isset($_SESSION["Ingresar"])) {
-  echo "Sesión Ingresar está activa: " . $_SESSION["Ingresar"];
+session_start(); // Iniciar sesión
+
+// Depuración: Mostrar datos de la sesión
+error_log("Sesión iniciada. Datos de sesión: " . print_r($_SESSION, true));
+
+// Verificar si el usuario ya ha iniciado sesión
+if (isset($_SESSION["Ingresar"]) && $_SESSION["Ingresar"] == true) {
+    error_log("Usuario ha iniciado sesión. Rol: " . $_SESSION["rol"]);
+
+    // Redirigir al usuario a la página correspondiente según su rol
+    switch ($_SESSION["rol"]) {
+        case "Administrador":
+            error_log("Redirigiendo a admin.php");
+            if (file_exists("admin.php")) {
+                header("Location: admin.php");
+                exit();
+            } else {
+                error_log("Error: admin.php no existe.");
+            }
+            break;
+        case "Doctor":
+            error_log("Redirigiendo a doctores.php");
+            if (file_exists("doctores.php")) {
+                header("Location: doctores.php");
+                exit();
+            } else {
+                error_log("Error: doctores.php no existe.");
+            }
+            break;
+        case "Paciente":
+            error_log("Redirigiendo a pacientes.php");
+            if (file_exists("pacientes.php")) {
+                header("Location: pacientes.php");
+                exit();
+            } else {
+                error_log("Error: pacientes.php no existe.");
+            }
+            break;
+        case "Secretaria":
+            error_log("Redirigiendo a secretarias.php");
+            if (file_exists("secretarias.php")) {
+                header("Location: secretarias.php");
+                exit();
+            } else {
+                error_log("Error: secretarias.php no existe.");
+            }
+            break;
+        default:
+            error_log("Rol no válido. Redirigiendo a login.php");
+            header("Location: login.php");
+            exit();
+    }
 } else {
-  echo "Sesión Ingresar no está activa.";
+    error_log("Usuario no ha iniciado sesión.");
 }
+
+// Si no hay sesión activa, mostrar el formulario de inicio de sesión
 ?>
 
 <!DOCTYPE html>
@@ -19,12 +73,14 @@ if (isset($_SESSION["Ingresar"])) {
   <title>Clínica Médica</title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 
+  <!-- Favicon -->
   <?php
   // Llamada directa al método sin utilizar el patrón Singleton
   $favicon = new InicioC();
   $favicon->FaviconC();
   ?>
 
+  <!-- Estilos -->
   <link rel="stylesheet" href="http://localhost/clinica/Vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="http://localhost/clinica/Vistas/bower_components/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="http://localhost/clinica/Vistas/bower_components/Ionicons/css/ionicons.min.css">
@@ -36,136 +92,61 @@ if (isset($_SESSION["Ingresar"])) {
     href="http://localhost/clinica/Vistas/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
   <link rel="stylesheet" href="http://localhost/clinica/Vistas/bower_components/fullcalendar/dist/fullcalendar.min.css">
   <link rel="stylesheet"
-    href="http://localhost/clinica/Vistas/bower_components/fullcalendar/dist/fullcalendar.print.min.css" media="print">
+    href=" http://localhost/clinica/Vistas/bower_components/fullcalendar/dist/fullcalendar.print.min.css" media="print">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 </head>
 
 <body class="hold-transition skin-blue sidebar-mini login-page">
-  <!-- Site wrapper -->
+  <!-- Formulario de inicio de sesión -->
+  <div class="login-box">
+    <div class="login-logo">
+      <a href="#"><b>Clínica Médica</b></a>
+    </div>
+    <!-- /.login-logo -->
+    <div class="login-box-body">
+      <p class="login-box-msg">Iniciar Sesión</p>
 
-  <?php
-  if (isset($_SESSION["Ingresar"]) && $_SESSION["Ingresar"] == true) {
-    echo '<div class="wrapper">';
+      <form method="post" action="index.php?ruta=login">
+        <div class="form-group has-feedback">
+          <input type="text" class="form-control" name="usuario" placeholder="Usuario" required>
+          <span class="glyphicon glyphicon-user form-control-feedback"></span>
+        </div>
 
-    include __DIR__ . "/modulos/cabecera.php";
+        <div class="form-group has-feedback">
+          <input type="password" class="form-control" name="clave" placeholder="Contraseña" required>
+          <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+        </div>
 
-    if ($_SESSION["rol"] == "Secretaria") {
-      include __DIR__ . "/modulos/menuSecretaria.php";
-    } else if ($_SESSION["rol"] == "Paciente") {
-      include __DIR__ . "/modulos/menuPaciente.php";
-    } else if ($_SESSION["rol"] == "Doctor") {
-      include __DIR__ . "/modulos/menuDoctor.php";
-    } else if ($_SESSION["rol"] == "Administrador") {
-      include __DIR__ . "/modulos/menuAdmin.php";
-    }
+        <div class="row">
+          <div class="col-xs-12">
+            <button type="submit" class="btn btn-primary btn-block btn-flat">Ingresar</button>
+          </div>
+        </div>
+      </form>
 
-    $url = array();
-    if (isset($_GET["url"])) {
-      $url = explode("/", $_GET["url"]);
-      if (
-        $url[0] == "inicio" || $url[0] == "salir" ||
-        $url[0] == "perfil-Secretaria" || $url[0] == "perfil-S" ||
-        $url[0] == "consultorios" || $url[0] == "E-C" ||
-        $url[0] == "doctores" || $url[0] == "pacientes" ||
-        $url[0] == "perfil-Paciente" || $url[0] == "perfil-P" ||
-        $url[0] == "Ver-consultorios" || $url[0] == "Doctor" ||
-        $url[0] == "historial" || $url[0] == "perfil-Doctor" ||
-        $url[0] == "perfil-D" || $url[0] == "Citas" ||
-        $url[0] == "perfil-Administrador" || $url[0] == "perfil-A" ||
-        $url[0] == "secretarias" || $url[0] == "inicio-editar"
-      ) {
-        include __DIR__ . "/modulos/" . $url[0] . ".php";
+      <?php
+      // Procesar el formulario de login si se envió
+      if ($_SERVER["REQUEST_METHOD"] == "POST") {
+          error_log("Formulario de login enviado.");
+
+          require_once "Controladores/inicioC.php";
+          $login = new InicioC();
+          $login->ctrLogin();
       }
-    } else {
-      include __DIR__ . "/modulos/inicio.php";
-    }
+      ?>
+    </div>
+    <!-- /.login-box-body -->
+  </div>
+  <!-- /.login-box -->
 
-    echo '</div>';
-  } else if (isset($_GET["url"])) {
-    if ($_GET["url"] == "seleccionar") {
-      include __DIR__ . "/modulos/seleccionar.php";
-    } else if ($_GET["url"] == "ingreso-Secretaria") {
-      include __DIR__ . "/modulos/ingreso-Secretaria.php";
-    } else if ($_GET["url"] == "ingreso-Paciente") {
-      include __DIR__ . "/modulos/ingreso-Paciente.php";
-    } else if ($_GET["url"] == "ingreso-Doctor") {
-      include __DIR__ . "/modulos/ingreso-Doctor.php";
-    } else if ($_GET["url"] == "ingreso-Administrador") {
-      include __DIR__ . "/modulos/ingreso-Administrador.php";
-    }
-  } else {
-    include __DIR__ . "/modulos/seleccionar.php";
-  }
-  ?>
-
-  <!-- ./wrapper -->
-
+  <!-- Scripts -->
   <script src="http://localhost/clinica/Vistas/bower_components/jquery/dist/jquery.min.js"></script>
   <script src="http://localhost/clinica/Vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="http://localhost/clinica/Vistas/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
   <script src="http://localhost/clinica/Vistas/bower_components/fastclick/lib/fastclick.js"></script>
   <script src="http://localhost/clinica/Vistas/dist/js/adminlte.min.js"></script>
   <script src="http://localhost/clinica/Vistas/dist/js/demo.js"></script>
-  <script src="http://localhost/clinica/Vistas/bower_components/datatables.net/js/jquery.dataTables.js"></script>
-  <script src="http://localhost/clinica/Vistas/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
-  <script
-    src="http://localhost/clinica/Vistas/bower_components/datatables.net-bs/js/dataTables.responsive.min.js"></script>
-  <script
-    src="http://localhost/clinica/Vistas/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
-  <script src="http://localhost/clinica/Vistas/bower_components/moment/moment.js"></script>
-  <script src="http://localhost/clinica/Vistas/bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
-  <script src="http://localhost/clinica/Vistas/bower_components/fullcalendar/dist/locale/es.js"></script>
-  <script src="http://localhost/clinica/Vistas/js/doctores.js"></script>
-  <script src="http://localhost/clinica/Vistas/js/pacientes.js"></script>
-  <script src="http://localhost/clinica/Vistas/js/secretarias.js"></script>
-
-  <script>
-    $(document).ready(function () {
-      $('.sidebar-menu').tree()
-    })
-
-    var date = new Date()
-    var d = date.getDate(),
-      m = date.getMonth(),
-      y = date.getFullYear()
-    $('#calendar').fullCalendar({
-
-      hiddenDays: [0, 6],
-
-      defaultView: 'agendaWeek',
-
-      events: [
-
-        <?php
-
-        $columna = null;
-        $valor = null;
-
-        $resultado = CitasC::VerCitasC($columna, $valor);
-
-        foreach ($resultado as $key => $value) {
-
-          if ($value["id_doctor"] == substr($_GET["url"], 7)) {
-
-            echo '{
-                              id: ' . $value["id"] . ',
-                              title: "' . $value["nyaP"] . '",
-                              start: "' . $value["inicio"] . '",
-                              end: "' . $value["fin"] . '",
-                              color: "' . $value["color"] . '",
-                            },';
-
-          }
-
-        }
-
-        ?>
-
-      ]
-    })
-  </script>
-
 </body>
 
 </html>

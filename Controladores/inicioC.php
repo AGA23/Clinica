@@ -1,10 +1,10 @@
 <?php
 // Incluir el archivo del modelo InicioM
 require_once __DIR__ . '/../Modelos/inicioM.php';
+require_once __DIR__ . '/../Modelos/LoginM.php';
 
 class InicioC
 {
-
     public function MostrarInicioC()
     {
         $tablaBD = "inicio";
@@ -103,11 +103,7 @@ class InicioC
                 }
 
                 if ($_FILES["logo"]["type"] == "image/png") {
-
                     $rutaLogo = "img/logo.png";
-                    echo $rutaLogo;
-
-
                     $logo = imagecreatefrompng($_FILES["logo"]["tmp_name"]);
                     imagepng($logo, $rutaLogo);
                 }
@@ -162,5 +158,48 @@ class InicioC
 
         echo '<link rel="icon" type="" href="' . $resultado["favicon"] . '">';
     }
+
+    public function ctrLogin()
+{
+    if (isset($_POST["usuario"]) && isset($_POST["clave"])) {
+        $usuario = $_POST["usuario"];
+        $clave = $_POST["clave"];
+
+        // Llamar al método unificado de autenticación
+        $respuesta = LoginM::AutenticarUsuarioM($usuario, $clave);
+
+        if ($respuesta) {
+            // Iniciar sesión y redirigir según el rol
+            session_start();
+            $_SESSION["Ingresar"] = true;
+            $_SESSION["usuario"] = $respuesta["usuario"];
+            $_SESSION["rol"] = $respuesta["rol"];
+            $_SESSION["id"] = $respuesta["id"];
+            $_SESSION["nombre"] = $respuesta["nombre"];
+            $_SESSION["apellido"] = $respuesta["apellido"];
+            $_SESSION["foto"] = $respuesta["foto"];
+
+            switch ($respuesta["rol"]) {
+                case "Administrador":
+                    header("Location: ingreso-Administrador.php");
+                    exit();
+                case "Doctor":
+                    header("Location: ingreso-Doctor.php");
+                    exit();
+                case "Paciente":
+                    header("Location: ingreso-Paciente.php");
+                    exit();
+                case "Secretaria":
+                    header("Location: ingreso-Secretaria.php");
+                    exit();
+                default:
+                    echo "<script>alert('Rol no válido');</script>";
+                    break;
+            }
+        } else {
+            echo "<script>alert('Usuario o contraseña incorrectos');</script>";
+        }
+    }
+}
 }
 ?>

@@ -24,7 +24,7 @@ class DoctoresM extends ConexionBD {
     }
 
     // Mostrar Doctores
-    static public function VerDoctoresM($tablaBD, $columna, $valor) {
+    static public function VerDoctoresM($tablaBD, $columna = null, $valor = null) {
         $valid_columns = ['id', 'apellido', 'nombre', 'sexo', 'id_consultorio', 'usuario', 'rol']; // Columnas válidas
 
         if ($columna != null && in_array($columna, $valid_columns)) {
@@ -46,21 +46,34 @@ class DoctoresM extends ConexionBD {
             $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD WHERE $columna = :$columna");
             $pdo->bindParam(":".$columna, $valor, PDO::PARAM_STR);
             $pdo->execute();
-            return $pdo->fetch();
+            return $pdo->fetch(PDO::FETCH_ASSOC); // Retorna un solo registro como array asociativo
         }
-        return false;
+        return false; // Retorna false si la columna no es válida
     }
 
     // Actualizar Doctores
     static public function ActualizarDoctorM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("UPDATE $tablaBD SET apellido = :apellido, nombre = :nombre, sexo = :sexo, usuario = :usuario, clave = :clave WHERE id = :id");
+        $sql = "UPDATE $tablaBD SET apellido = :apellido, nombre = :nombre, sexo = :sexo, usuario = :usuario";
+        
+        // Solo agregar la clave si se proporciona
+        if (!empty($datosC["clave"])) {
+            $sql .= ", clave = :clave";
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $pdo = ConexionBD::getInstancia()->prepare($sql);
 
         $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
         $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
         $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
         $pdo->bindParam(":sexo", $datosC["sexo"], PDO::PARAM_STR);
         $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-        $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
+
+        // Solo vincular la clave si es proporcionada
+        if (!empty($datosC["clave"])) {
+            $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
+        }
 
         if ($pdo->execute()) {
             return true;
@@ -99,17 +112,28 @@ class DoctoresM extends ConexionBD {
 
     // Actualizar Perfil Doctor
     static public function ActualizarPerfilDoctorM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("UPDATE $tablaBD SET id_consultorio = :id_consultorio, apellido = :apellido, nombre = :nombre, foto = :foto, usuario = :usuario, clave = :clave, horarioE = :horarioE, horarioS = :horarioS WHERE id = :id");
+        $sql = "UPDATE $tablaBD SET id_consultorio = :id_consultorio, apellido = :apellido, nombre = :nombre, foto = :foto, usuario = :usuario, horarioE = :horarioE, horarioS = :horarioS WHERE id = :id";
+        
+        // Solo agregar la clave si se proporciona
+        if (!empty($datosC["clave"])) {
+            $sql .= ", clave = :clave";
+        }
+
+        $pdo = ConexionBD::getInstancia()->prepare($sql);
 
         $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
-        $pdo->bindParam(":id_consultorio", $datosC["consultorio"], PDO::PARAM_INT);
+        $pdo->bindParam(":id_consultorio", $datosC["id_consultorio"], PDO::PARAM_INT); // Corregido aquí
         $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
         $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
         $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-        $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
         $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
         $pdo->bindParam(":horarioE", $datosC["horarioE"], PDO::PARAM_STR);
         $pdo->bindParam(":horarioS", $datosC["horarioS"], PDO::PARAM_STR);
+
+        // Solo vincular la clave si es proporcionada
+        if (!empty($datosC["clave"])) {
+            $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
+        }
 
         if ($pdo->execute()) {
             return true;

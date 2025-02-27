@@ -1,4 +1,7 @@
-<?php 
+<?php
+// Habilitar la visualización de errores
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require_once "../Controladores/doctoresC.php";
 require_once "../Modelos/doctoresM.php";
@@ -16,14 +19,29 @@ class DoctoresA {
 
             $resultado = DoctoresC::DoctorC($columna, $valor);
 
+            // Verificar lo que retorna DoctoresC::DoctorC
+            error_log("Resultado de DoctoresC::DoctorC: " . print_r($resultado, true));
+
             if ($resultado) {
-                echo json_encode($resultado);  // Si se encuentra el doctor, retorna sus datos
+                // Respuesta JSON exitosa
+                echo json_encode([
+                    'success' => true,
+                    'data' => $resultado
+                ]);
             } else {
-                echo json_encode(["error" => "No se encontró el doctor con el ID: " . $this->Did]);
+                // Respuesta JSON de error
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'No se encontró el doctor con el ID: ' . $this->Did
+                ]);
             }
         } catch (Exception $e) {
-            error_log("Error en DoctoresA: " . $e->getMessage()); // Log para errores
-            echo json_encode(["error" => "Ocurrió un error: " . $e->getMessage()]);
+            // Respuesta JSON de error en caso de excepción
+            error_log("Error en DoctoresA: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => 'Ocurrió un error: ' . $e->getMessage()
+            ]);
         }
     }
 }
@@ -36,9 +54,17 @@ if (isset($_POST["Did"])) {
         $eD->Did = $Did;  // Asignar el valor validado
         $eD->EDoctorA();
     } else {
-        echo json_encode(["error" => "ID inválido"]);
+        // Respuesta JSON de error si el ID no es válido
+        echo json_encode([
+            'success' => false,
+            'error' => 'ID inválido o no es un número entero'
+        ]);
     }
 } else {
-    echo json_encode(["error" => "No se ha proporcionado un ID"]);
+    // Respuesta JSON de error si no se proporcionó un ID
+    echo json_encode([
+        'success' => false,
+        'error' => 'No se ha proporcionado un ID'
+    ]);
 }
 ?>

@@ -1,117 +1,152 @@
 <?php
-// Esto debe ir en la parte superior del archivo, antes de cualquier salida
-header('Content-Type: text/html; charset=UTF-8'); // Esto asegura que el contenido sea en UTF-8, por ejemplo.
-
-class CitasC {
-
-    // Instancia de CitasM para acceder a los métodos no estáticos
-    private $citasM;
-
-    // Constructor para inicializar CitasM
-    public function __construct() {
-        $this->citasM = new CitasM(); // Crear instancia de CitasM
-    }
-
-    // Pedir Cita Paciente
-    public function EnviarCitaC() {
-        // Verificar si las variables necesarias están definidas y sanitizar los datos
-        if (isset($_POST["Did"], $_POST["Pid"], $_POST["nyaC"], $_POST["Cid"], $_POST["documentoC"], $_POST["fyhIC"], $_POST["fyhFC"])) {
-            $tablaBD = "citas";
-            $Did = filter_var($_POST["Did"], FILTER_SANITIZE_NUMBER_INT); // Sanitizar datos
-            $Pid = filter_var($_POST["Pid"], FILTER_SANITIZE_NUMBER_INT);
-            $nyaC = htmlspecialchars($_POST["nyaC"], ENT_QUOTES, 'UTF-8');
-            $Cid = filter_var($_POST["Cid"], FILTER_SANITIZE_NUMBER_INT);
-            $documentoC = filter_var($_POST["documentoC"], FILTER_SANITIZE_STRING);
-            $fyhIC = filter_var($_POST["fyhIC"], FILTER_SANITIZE_STRING); // Verificar formato si es necesario
-            $fyhFC = filter_var($_POST["fyhFC"], FILTER_SANITIZE_STRING); // Verificar formato si es necesario
-
-            // Preparar datos para enviar a CitasM
-            $datosC = array(
-                "Did" => $Did,
-                "Pid" => $Pid,
-                "nyaC" => $nyaC,
-                "Cid" => $Cid,
-                "documentoC" => $documentoC,
-                "fyhIC" => $fyhIC,
-                "fyhFC" => $fyhFC
-            );
-
-            // Usar el método no estático de CitasM
-            $resultado = $this->citasM->EnviarCitaM($tablaBD, $datosC);
-
-            // Responder según el resultado de la operación
-            if ($resultado) {
-                echo 'Cita registrada correctamente.';
-            } else {
-                echo 'Error al registrar la cita.';
-            }
-        } else {
-            echo 'Faltan datos requeridos.';
-        }
-    }
-
-    // Mostrar Citas
-    public function VerCitasC() {
-        $tablaBD = "citas";
-        $resultado = $this->citasM->VerCitasM($tablaBD);
-        return $resultado;
-    }
-
-    // Pedir cita como doctor
-    public function PedirCitaDoctorC() {
-        // Verificar si las variables necesarias están definidas y sanitizar los datos
-        if (isset($_POST["Did"], $_POST["Cid"], $_POST["nombreP"], $_POST["documentoP"], $_POST["fyhIC"], $_POST["fyhFC"])) {
-            $tablaBD = "citas";
-            $Did = filter_var($_POST["Did"], FILTER_SANITIZE_NUMBER_INT);
-            $Cid = filter_var($_POST["Cid"], FILTER_SANITIZE_NUMBER_INT);
-            $nombreP = htmlspecialchars($_POST["nombreP"], ENT_QUOTES, 'UTF-8');
-            $documentoP = filter_var($_POST["documentoP"], FILTER_SANITIZE_STRING);
-            $fyhIC = filter_var($_POST["fyhIC"], FILTER_SANITIZE_STRING);
-            $fyhFC = filter_var($_POST["fyhFC"], FILTER_SANITIZE_STRING);
-
-            // Preparar datos para enviar a CitasM
-            $datosC = array(
-                "Did" => $Did,
-                "Cid" => $Cid,
-                "nombreP" => $nombreP,
-                "documentoP" => $documentoP,
-                "fyhIC" => $fyhIC,
-                "fyhFC" => $fyhFC
-            );
-
-            // Usar el método no estático de CitasM
-            $resultado = $this->citasM->PedirCitaDoctorM($tablaBD, $datosC);
-
-            // Responder según el resultado de la operación
-            if ($resultado) {
-                echo 'Cita pedida correctamente.';
-            } else {
-                echo 'Error al pedir la cita.';
-            }
-        } else {
-            echo 'Faltan datos requeridos.';
-        }
-    }
-
-    // Cancelar Cita
-    public function CancelarCitaC() {
-        // Verificar si el id de la cita está definido y sanitizar
-        if (isset($_POST["id_Cita"])) {
-            $tablaBD = "citas";
-            $id = filter_var($_POST["id_Cita"], FILTER_SANITIZE_NUMBER_INT);
-
-            // Usar el método no estático de CitasM
-            $resultado = $this->citasM->CancelarCitaM($tablaBD, $id);
-
-            // Responder según el resultado de la operación
-            if ($resultado) {
-                echo 'Cita cancelada correctamente.';
-            } else {
-                echo 'Error al cancelar la cita.';
-            }
-        } else {
-            echo 'ID de cita no proporcionado.';
-        }
-    }
+// Iniciar sesión si no está iniciada
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
+
+// Verificar permisos de usuario
+if (!isset($_SESSION["rol"])) {
+    // Redirigir al usuario a la página de inicio de sesión
+    echo '<script> window.location = "login"; </script>';
+    exit(); // Detener la ejecución del script
+}
+
+if ($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Administrador") {
+    echo '<script> window.location = "inicio"; </script>';
+    exit(); // Detener la ejecución del script
+}
+
+require_once dirname(__DIR__) . "/Modelos/doctoresM.php";  // Asegúrate de que esta ruta sea correcta
+require_once dirname(__DIR__) . "/Modelos/consultoriosM.php"; // Incluir el modelo de consultorios
 ?>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Gestor de Doctores</h1>
+    </section>
+
+    <section class="content">
+        <div class="box">
+            <div class="box-header">
+                <?php
+                // Mostrar el botón "Crear Doctor" solo para Administrador o Secretaria
+                if ($_SESSION["rol"] == "Administrador" || $_SESSION["rol"] == "Secretaria") {
+                    echo '<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#CrearDoctor">Crear Doctor</button>';
+                }
+                ?>
+            </div>
+
+            <div class="box-body">
+                <table class="table table-bordered table-hover table-striped DT">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Apellido</th>
+                            <th>Nombre</th>
+                            <th>Foto</th>
+                            <th>Consultorio</th>
+                            <th>Usuario</th>
+                            <th>Contraseña</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php
+                        $columna = null;
+                        $valor = null;
+
+                        // Obtener todos los doctores
+                        $resultado = DoctoresM::VerDoctoresM("doctores", $columna, $valor);
+
+                        // Verificar si el resultado es un array válido y no está vacío
+                        if (is_array($resultado) && !empty($resultado)) {
+                            foreach ($resultado as $key => $value) {
+                                echo '<tr>
+                                        <td>' . ($key + 1) . '</td>
+                                        <td>' . (isset($value["apellido"]) ? htmlspecialchars($value["apellido"]) : "No disponible") . '</td>
+                                        <td>' . (isset($value["nombre"]) ? htmlspecialchars($value["nombre"]) : "No disponible") . '</td>';
+
+                                // Mostrar la foto del doctor (o una imagen por defecto si no hay foto)
+                                $foto = (isset($value["foto"]) && !empty($value["foto"])) ? $value["foto"] : "Vistas/img/defecto.png";
+                                echo '<td><img src="' . htmlspecialchars($foto) . '" width="40px"></td>';
+
+                                // Obtener el nombre del consultorio
+                                $columna = "id";
+                                $valor = isset($value["id_consultorio"]) ? $value["id_consultorio"] : null;
+                                $consultorio = ConsultoriosM::VerConsultoriosM("consultorios", $columna, $valor);
+
+                                // Mostrar el nombre del consultorio (o un mensaje si no está disponible)
+                                $nombreConsultorio = (is_array($consultorio) && isset($consultorio["nombre"])) ? htmlspecialchars($consultorio["nombre"]) : "Consultorio no disponible";
+                                echo '<td>' . $nombreConsultorio . '</td>';
+
+                                // Mostrar el usuario y la contraseña (o un mensaje si no están disponibles)
+                                $usuario = isset($value["usuario"]) ? htmlspecialchars($value["usuario"]) : "No disponible";
+                                $clave = isset($value["clave"]) ? htmlspecialchars($value["clave"]) : "No disponible";
+
+                                echo '<td>' . $usuario . '</td>
+                                      <td>' . $clave . '</td>
+                                      <td>
+                                          <div class="btn-group">
+                                              <button class="btn btn-success EditarDoctor" Did="' . (isset($value["id"]) ? $value["id"] : "") . '" data-toggle="modal" data-target="#EditarDoctor"><i class="fa fa-pencil"></i> Editar</button>
+                                              <button class="btn btn-danger EliminarDoctor" Did="' . (isset($value["id"]) ? $value["id"] : "") . '" imgD="' . (isset($value["foto"]) ? $value["foto"] : "") . '"><i class="fa fa-times"></i> Borrar</button>
+                                          </div>
+                                      </td>
+                                  </tr>';
+                            }
+                        } else {
+                            // Mostrar un mensaje si no hay doctores registrados
+                            echo '<tr><td colspan="8">No se encontraron doctores registrados.</td></tr>';
+                        }
+                        ?> 
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal para crear un doctor -->
+<div class="modal fade" id="CrearDoctor" tabindex="-1" role="dialog" aria-labelledby="CrearDoctorLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="CrearDoctorLabel">Crear Doctor</h4>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearDoctor">
+                    <div class="form-group">
+                        <label for="apellidoC">Apellido:</label>
+                        <input type="text" class="form-control" id="apellidoC" name="apellidoC" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombreC">Nombre:</label>
+                        <input type="text" class="form-control" id="nombreC" name="nombreC" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="usuarioC">Usuario:</label>
+                        <input type="text" class="form-control" id="usuarioC" name="usuarioC" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="claveC">Contraseña:</label>
+                        <input type="password" class="form-control" id="claveC" name="claveC" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sexoC">Sexo:</label>
+                        <select class="form-control" id="sexoC" name="sexoC" required>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

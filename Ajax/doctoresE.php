@@ -1,37 +1,46 @@
 <?php
-session_start();
-require_once "../Modelos/DoctoresM.php";  // Incluye el modelo para interactuar con la base de datos
-require_once "../Modelos/ConsultoriosM.php"; // Si usas consultas relacionadas con los consultorios
+session_start(); // Iniciar sesión al principio
 
-// Log para verificar sesión
-error_log("Rol del usuario: " . $_SESSION["rol"]);
-
-// Asegúrate de que el usuario tenga permisos adecuados
+// Verificar permisos de usuario
 if ($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Administrador") {
     echo json_encode(["error" => "No tienes permiso para realizar esta acción"]);
     exit();
 }
 
-if (isset($_POST["Did"])) {
-    $idDoctor = $_POST["Did"];
-    $apellido = $_POST["apellidoE"];
-    $nombre = $_POST["nombreE"];
-    $usuario = $_POST["usuarioE"];
-    $clave = $_POST["claveE"];
-    $sexo = $_POST["sexoE"];
+require_once __DIR__ . "/../Modelos/DoctoresM.php"; // Incluir el modelo
 
-    // Log para verificar que los datos se recibieron correctamente
-    error_log("Datos recibidos: ID=" . $idDoctor . ", Apellido=" . $apellido);
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["Did"])) {
+    $Did = filter_var($_POST["Did"], FILTER_VALIDATE_INT); // Validar el ID del doctor
 
-    // Aquí puedes agregar la lógica para actualizar la información del doctor
-    $resultado = DoctoresM::ActualizarDoctor($idDoctor, $apellido, $nombre, $usuario, $clave, $sexo);
+    if ($Did) {
+        // Eliminar el doctor
+        $resultado = DoctoresM::BorrarDoctorM("doctores", $Did);
 
-    if ($resultado) {
-        echo json_encode(["success" => true]);
+        if ($resultado) {
+            // Respuesta JSON exitosa
+            echo json_encode([
+                'success' => true,
+                'message' => 'Doctor eliminado correctamente.'
+            ]);
+        } else {
+            // Respuesta JSON de error
+            echo json_encode([
+                'success' => false,
+                'error' => 'No se pudo eliminar el doctor.'
+            ]);
+        }
     } else {
-        echo json_encode(["success" => false, "error" => "Hubo un error al actualizar los datos del doctor"]);
+        // Respuesta JSON de error si el ID no es válido
+        echo json_encode([
+            'success' => false,
+            'error' => 'ID de doctor inválido'
+        ]);
     }
 } else {
-    echo json_encode(["success" => false, "error" => "ID de doctor no proporcionado"]);
+    // Respuesta JSON de error si no se proporcionó un ID
+    echo json_encode([
+        'success' => false,
+        'error' => 'ID de doctor no proporcionado'
+    ]);
 }
 ?>

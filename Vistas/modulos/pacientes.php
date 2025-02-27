@@ -2,293 +2,283 @@
 
 if($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Doctor" && $_SESSION["rol"] != "Administrador"){
 
-	echo '<script>
+    echo '<script>
+    window.location = "inicio";
+    </script>';
 
-	window.location = "inicio";
-	</script>';
-
-	return;
-
+    return;
 }
-
 
 ?>
 
 <div class="content-wrapper">
-	
-	<section class="content-header">
-		
-		<h1>Gestor de Pacientes</h1>
+    
+    <section class="content-header">
+        
+        <h1>Gestor de Pacientes</h1>
 
-	</section>
+    </section>
 
-	<section class="content">
-		
-		<div class="box">
-			
-			<div class="box-header">
-				
-				<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#CrearPaciente">Crear Paciente</button>
-				
-			</div>
+    <section class="content">
+        
+        <div class="box">
+            
+            <div class="box-header">
+                
+                <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#CrearPaciente">Crear Paciente</button>
+                
+            </div>
 
+            <div class="box-body">
+                
+                <table class="table table-bordered table-hover table-striped DT">
+                    
+                    <thead>
+                        
+                        <tr>
+                            
+                            <th>N°</th>
+                            <th>Apellido</th>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Foto</th>
+                            <th>Usuario</th>
+                            <th>Contraseña</th>
+                            <th>Editar / Borrar</th>
 
-			<div class="box-body">
-				
-				<table class="table table-bordered table-hover table-striped DT">
-					
-					<thead>
-						
-						<tr>
-							
-							<th>N°</th>
-							<th>Apellido</th>
-							<th>Nombre</th>
-							<th>Documento</th>
-							<th>Foto</th>
-							<th>Usuario</th>
-							<th>Contraseña</th>
-							<th>Editar / Borrar</th>
+                        </tr>
 
-						</tr>
+                    </thead>
 
-					</thead>
+                    <tbody>
 
-					<tbody>
+                        <?php
 
-						<?php
+                        $columna = null;
+                        $valor = null;
 
-						$columna = null;
-						$valor = null;
+                        $resultado = PacientesC::VerPacientesC($columna, $valor);
 
-						$resultado = PacientesC::VerPacientesC($columna, $valor);
+                        foreach ($resultado as $key => $value) {
+                            
+                            // Verificación para evitar errores de clave indefinida
+                            $apellido = isset($value["apellido"]) ? $value["apellido"] : 'No disponible';
+                            $nombre = isset($value["nombre"]) ? $value["nombre"] : 'No disponible';
+                            $documento = isset($value["documento"]) ? $value["documento"] : 'No disponible';
+                            $foto = isset($value["foto"]) ? $value["foto"] : 'Vistas/img/defecto.png'; // Imagen por defecto
+                            $usuario = isset($value["usuario"]) ? $value["usuario"] : 'No disponible';
+                            $clave = isset($value["clave"]) ? $value["clave"] : 'No disponible';
 
-						foreach ($resultado as $key => $value) {
-							
-							echo '<tr>
-					
-									<td>'.($key+1).'</td>
-									<td>'.$value["apellido"].'</td>
-									<td>'.$value["nombre"].'</td>
-									<td>'.$value["documento"].'</td>';
+                            echo '<tr>
+                    
+                                    <td>'.($key+1).'</td>
+                                    <td>'.$apellido.'</td>
+                                    <td>'.$nombre.'</td>
+                                    <td>'.$documento.'</td>
+                                    <td><img src="'.$foto.'" width="40px"></td>
+                                    <td>'.$usuario.'</td>
+                                    <td>'.$clave.'</td>
 
-									if($value["foto"] == ""){
+                                    <td>
+                                        
+                                        <div class="btn-group">
+                                            
+                                            <button class="btn btn-success EditarPaciente" Pid="'.$value["id"].'" data-toggle="modal" data-target="#EditarPaciente"><i class="fa fa-pencil"></i> Editar</button>
+                                            
+                                            <button class="btn btn-danger EliminarPaciente" Pid="'.$value["id"].'" imgP="'.$foto.'"><i class="fa fa-times"></i> Borrar</button>
+                                        
 
-										echo '<td><img src="Vistas/img/defecto.png" width="40px"></td>';
+                                        </div>
 
-									}else{
+                                    </td>
 
-										echo '<td><img src="'.$value["foto"].'" width="40px"></td>';
+                                </tr>';
 
-									}
-									
+                        }
 
-									echo '<td>'.$value["usuario"].'</td>
+                        ?>
 
-									<td>'.$value["clave"].'</td>
+                    </tbody>
 
-									<td>
-										
-										<div class="btn-group">
-											
-											
-											<button class="btn btn-success EditarPaciente" Pid="'.$value["id"].'" data-toggle="modal" data-target="#EditarPaciente"><i class="fa fa-pencil"></i> Editar</button>
-											
-											<button class="btn btn-danger EliminarPaciente" Pid="'.$value["id"].'" imgP="'.$value["foto"].'"><i class="fa fa-times"></i> Borrar</button>
-											
+                </table>
 
-										</div>
+            </div>
 
-									</td>
+        </div>
 
-								</tr>';
-
-						}
-
-						?>
-
-
-					</tbody>
-
-				</table>
-
-			</div>
-
-		</div>
-
-	</section>
+    </section>
 
 </div>
 
-
-
+<!-- Modal Crear Paciente -->
 <div class="modal fade" rol="dialog" id="CrearPaciente">
-	
-	<div class="modal-dialog">
-		
-		<div class="modal-content">
-			
-			<form method="post" role="form">
-				
-				<div class="modal-body">
-					
-					<div class="box-body">
-						
-						<div class="form-group">
-							
-							<h2>Apellido:</h2>
+    
+    <div class="modal-dialog">
+        
+        <div class="modal-content">
+            
+            <form method="post" role="form">
+                
+                <div class="modal-body">
+                    
+                    <div class="box-body">
+                        
+                        <div class="form-group">
+                            
+                            <h2>Apellido:</h2>
 
-							<input type="text" class="form-control input-lg" name="apellido" required>
+                            <input type="text" class="form-control input-lg" name="apellido" required>
 
-							<input type="hidden" name="rolP" value="Paciente">
+                            <input type="hidden" name="rolP" value="Paciente">
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Nombre:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Nombre:</h2>
 
-							<input type="text" class="form-control input-lg" name="nombre" required>
+                            <input type="text" class="form-control input-lg" name="nombre" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Documento:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Documento:</h2>
 
-							<input type="text" class="form-control input-lg" name="documento" required>
+                            <input type="text" class="form-control input-lg" name="documento" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Usuario:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Usuario:</h2>
 
-							<input type="text" class="form-control input-lg" id="usuario" name="usuario" required>
+                            <input type="text" class="form-control input-lg" id="usuario" name="usuario" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Contraseña:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Contraseña:</h2>
 
-							<input type="text" class="form-control input-lg" name="clave" required>
+                            <input type="text" class="form-control input-lg" name="clave" required>
 
-						</div>
+                        </div>
 
-					</div>
+                    </div>
 
-				</div>
+                </div>
 
 
-				<div class="modal-footer">
-					
-					<button type="submit" class="btn btn-primary">Crear</button>
+                <div class="modal-footer">
+                    
+                    <button type="submit" class="btn btn-primary">Crear</button>
 
-					<button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
 
-				</div>
+                </div>
 
-				<?php
+                <?php
 
-				$crear = new PacientesC();
-				$crear -> CrearPacienteC();
+                $crear = new PacientesC();
+                $crear -> CrearPacienteC();
 
-				?>
+                ?>
 
-			</form>
+            </form>
 
-		</div>
+        </div>
 
-	</div>
+    </div>
 
 </div>
 
-
+<!-- Modal Editar Paciente -->
 <div class="modal fade" rol="dialog" id="EditarPaciente">
-	
-	<div class="modal-dialog">
-		
-		<div class="modal-content">
-			
-			<form method="post" role="form">
-				
-				<div class="modal-body">
-					
-					<div class="box-body">
-						
-						<div class="form-group">
-							
-							<h2>Apellido:</h2>
+    
+    <div class="modal-dialog">
+        
+        <div class="modal-content">
+            
+            <form method="post" role="form">
+                
+                <div class="modal-body">
+                    
+                    <div class="box-body">
+                        
+                        <div class="form-group">
+                            
+                            <h2>Apellido:</h2>
 
-							<input type="text" class="form-control input-lg" id="apellidoE" name="apellidoE" required>
+                            <input type="text" class="form-control input-lg" id="apellidoE" name="apellidoE" required>
 
-							<input type="hidden" id="Pid" name="Pid">
+                            <input type="hidden" id="Pid" name="Pid">
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Nombre:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Nombre:</h2>
 
-							<input type="text" class="form-control input-lg" id="nombreE" name="nombreE" required>
+                            <input type="text" class="form-control input-lg" id="nombreE" name="nombreE" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Documento:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Documento:</h2>
 
-							<input type="text" class="form-control input-lg" id="documentoE" name="documentoE" required>
+                            <input type="text" class="form-control input-lg" id="documentoE" name="documentoE" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Usuario:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Usuario:</h2>
 
-							<input type="text" class="form-control input-lg" id="usuarioE" name="usuarioE" required>
+                            <input type="text" class="form-control input-lg" id="usuarioE" name="usuarioE" required>
 
-						</div>
+                        </div>
 
-						<div class="form-group">
-							
-							<h2>Contraseña:</h2>
+                        <div class="form-group">
+                            
+                            <h2>Contraseña:</h2>
 
-							<input type="text" class="form-control input-lg" id="claveE" name="claveE" required>
+                            <input type="text" class="form-control input-lg" id="claveE" name="claveE" required>
 
-						</div>
+                        </div>
 
-					</div>
+                    </div>
 
-				</div>
+                </div>
 
 
-				<div class="modal-footer">
-					
-					<button type="submit" class="btn btn-success">Guardar Cambios</button>
+                <div class="modal-footer">
+                    
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
 
-					<button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
 
-				</div>
+                </div>
 
-				<?php
+                <?php
 
-				$actualizar = new PacientesC();
-				$actualizar -> ActualizarPacienteC();
+                $actualizar = new PacientesC();
+                $actualizar -> ActualizarPacienteC();
 
-				?>
+                ?>
 
-			</form>
+            </form>
 
-		</div>
+        </div>
 
-	</div>
+    </div>
 
 </div>
-
 
 <?php
 
 $borrarP = new PacientesC();
 $borrarP -> BorrarPacienteC();
+
+?>
