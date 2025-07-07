@@ -1,44 +1,50 @@
 <?php
-
 require_once "ConexionBD.php";
 
-class LoginM extends ConexionBD {
-
-    // Método para autenticar a cualquier tipo de usuario
-    static public function AutenticarUsuarioM($usuario, $clave) {
-        // Definir las tablas y roles
-        $tablas = [
-            "admin" => "Administrador",
-            "doctores" => "Doctor",
-            "pacientes" => "Paciente",
-            "secretarias" => "Secretaria"
+class LoginM
+{
+    public static function VerificarUsuario(string $usuario, string $clave): array|false
+    {
+        $conexion = ConexionBD::getInstancia();
+    
+        // Consulta unificada que incluye el id específico de cada tipo
+        $sql = "
+            SELECT id AS id_usuario, id AS id_admin, NULL AS id_doctor, NULL AS id_paciente, NULL AS id_secretaria, usuario, rol, nombre, apellido, foto 
+            FROM administradores 
+            WHERE usuario = :usuario AND clave = :clave
+    
+            UNION ALL
+    
+            SELECT id AS id_usuario, NULL AS id_admin, id AS id_doctor, NULL AS id_paciente, NULL AS id_secretaria, usuario, rol, nombre, apellido, foto 
+            FROM doctores 
+            WHERE usuario = :usuario2 AND clave = :clave2
+    
+            UNION ALL
+    
+            SELECT id AS id_usuario, NULL AS id_admin, NULL AS id_doctor, id AS id_paciente, NULL AS id_secretaria, usuario, rol, nombre, apellido, foto 
+            FROM pacientes 
+            WHERE usuario = :usuario3 AND clave = :clave3
+    
+            UNION ALL
+    
+            SELECT id AS id_usuario, NULL AS id_admin, NULL AS id_doctor, NULL AS id_paciente, id AS id_secretaria, usuario, rol, nombre, apellido, foto 
+            FROM secretarias 
+            WHERE usuario = :usuario4 AND clave = :clave4
+        ";
+    
+        $stmt = $conexion->prepare($sql);
+        $params = [
+            ':usuario' => $usuario,
+            ':clave' => $clave,
+            ':usuario2' => $usuario,
+            ':clave2' => $clave,
+            ':usuario3' => $usuario,
+            ':clave3' => $clave,
+            ':usuario4' => $usuario,
+            ':clave4' => $clave
         ];
-
-        // Recorrer las tablas y verificar las credenciales
-        foreach ($tablas as $tabla => $rol) {
-            try {
-                $pdo = ConexionBD::getInstancia()->prepare("SELECT id, usuario, clave, nombre, apellido, foto, rol FROM $tabla WHERE usuario = :usuario");
-                $pdo->bindParam(":usuario", $usuario, PDO::PARAM_STR);
-                $pdo->execute();
-
-                $resultado = $pdo->fetch();
-
-                if ($resultado) {
-                    // Verificar la contraseña
-                    if (password_verify($clave, $resultado["clave"])) {
-                        // Agregar el rol al resultado
-                        $resultado["rol"] = $rol;
-                        return $resultado;
-                    } else {
-                        error_log("Contraseña incorrecta para el usuario: " . $usuario);
-                    }
-                }
-            } catch (PDOException $e) {
-                error_log("Error en la consulta SQL: " . $e->getMessage());
-            }
-        }
-
-        return false; // Si no se encuentra el usuario en ninguna tabla
+    
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
-?>

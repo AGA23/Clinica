@@ -30,7 +30,6 @@ $(".DT").on("click", ".EditarPaciente", function(){
 			$("#Pid").val(resultado["id"]);
 			$("#apellidoE").val(resultado["apellido"]);
 			$("#nombreE").val(resultado["nombre"]);
-			$("#documentoE").val(resultado["documento"]);
 			$("#usuarioE").val(resultado["usuario"]);
 			$("#claveE").val(resultado["clave"]);
 
@@ -132,7 +131,7 @@ $(".SP").change(function(){
 
 		success: function(resultado){
 
-			$("#documentoP").val(resultado["documento"]);
+			
 			$("#nombreP").val(resultado["nombre"]+" "+resultado["apellido"]);
 
 		}

@@ -1,23 +1,27 @@
 <?php
+class PlantillaControlador
+{
+    public function LlamarPlantilla()
+    {
+        echo "Punto 2: Dentro de LlamarPlantilla()<br>"; // Mensaje de depuración
 
-class Plantilla {
+        // Ruta absoluta para asegurar que se encuentra el archivo
+        $ruta_absoluta = __DIR__ . "/../Vistas/plantilla.php";
+        echo "Ruta absoluta utilizada: " . $ruta_absoluta;
+        echo "Punto 3: Ruta absoluta calculada: $ruta_absoluta<br>"; // Mensaje de depuración
 
-    // Método para llamar la plantilla
-    public function LlamarPlantilla() {
-        // Ruta del archivo de la plantilla
-        $ruta = "Vistas/plantilla.php";
-        
-        // Verificar si el archivo plantilla.php existe
-        if (file_exists($ruta)) {
-            // Si el archivo existe, incluirlo
-            include $ruta;
-        } else {
-            // Si no existe el archivo, manejar el error
-            error_log("Error: El archivo plantilla.php no se encuentra en la ruta especificada.");
+        // Verificar si el archivo existe
+        if (file_exists($ruta_absoluta)) {
             
-            // Mostrar un mensaje en el navegador
-            echo "<div class='alert alert-danger'>Error: No se pudo cargar la plantilla. El archivo no fue encontrado.</div>";
+            include $ruta_absoluta;
+            
+        } else {
+            echo " El archivo plantilla.php no existe.<br>"; // Mensaje de depuración
         }
     }
 }
+
+// Crear una instancia del controlador y llamar al método LlamarPlantilla
+$controlador = new PlantillaControlador();
+$controlador->LlamarPlantilla();
 ?>

@@ -2,24 +2,23 @@
 
 require_once "ConexionBD.php";
 
-class PacientesM extends ConexionBD {
+class pacientesM extends ConexionBD {
 
     // Crear Pacientes
     static public function CrearPacienteM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("INSERT INTO $tablaBD(apellido, nombre, documento, usuario, clave, rol) VALUES (:apellido, :nombre, :documento, :usuario, :clave, :rol)");
+        $pdo = ConexionBD::getInstancia()->prepare("INSERT INTO $tablaBD(apellido, nombre, usuario, clave, rol) VALUES (:apellido, :nombre, :usuario, :clave, :rol)");
 
         $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
         $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
-        $pdo->bindParam(":documento", $datosC["documento"], PDO::PARAM_STR);
         $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
         $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
         $pdo->bindParam(":rol", $datosC["rol"], PDO::PARAM_STR);
 
         if ($pdo->execute()) {
-            return true;
+            return "ok";
         }
 
-        $pdo = null; // Asegúrate de cerrar la conexión
+        return "error";
     }
 
     // Ver Pacientes
@@ -34,8 +33,6 @@ class PacientesM extends ConexionBD {
             $pdo->execute();
             return $pdo->fetch();
         }
-
-        $pdo = null; // Asegúrate de cerrar la conexión
     }
 
     // Borrar Paciente
@@ -44,72 +41,63 @@ class PacientesM extends ConexionBD {
         $pdo->bindParam(":id", $id, PDO::PARAM_INT);
 
         if ($pdo->execute()) {
-            return true;
+            return "ok";
         }
 
-        $pdo = null; // Asegúrate de cerrar la conexión
+        return "error";
     }
 
-    // Actualizar Paciente
-    static public function ActualizarPacienteM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("UPDATE $tablaBD SET apellido = :apellido, nombre = :nombre, documento = :documento, usuario = :usuario, clave = :clave WHERE id = :id");
+   
 
-        $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
-        $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
-        $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
-        $pdo->bindParam(":documento", $datosC["documento"], PDO::PARAM_STR);
+    // Ingreso Paciente
+    static public function IngresoPacienteM($tablaBD, $datosC) {
+        $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD WHERE usuario = :usuario");
         $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-        $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
-
-        if ($pdo->execute()) {
-            return true;
-        }
-
-        $pdo = null; // Asegúrate de cerrar la conexión
+        $pdo->execute();
+        return $pdo->fetch();
     }
-
-  // Ingreso de los Pacientes
-static public function IngresarPacienteM($tablaBD, $datosC) {
-    $pdo = ConexionBD::getInstancia()->prepare("SELECT usuario, clave, apellido, nombre, documento, foto, rol, id FROM $tablaBD WHERE usuario = :usuario");
-    $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-    $pdo->execute();
-
-    // Obtener el resultado
-    $resultado = $pdo->fetch();
-
-    // Verificar si se encontró un resultado
-    if ($resultado) {
-        return $resultado; // Se encontró el usuario
-    } else {
-        return false; // No se encontró el usuario
-    }
-}
-
 
     // Ver Perfil del Paciente
     static public function VerPerfilPacienteM($tablaBD, $id) {
-        $pdo = ConexionBD::getInstancia()->prepare("SELECT usuario, clave, apellido, nombre, documento, foto, rol, id FROM $tablaBD WHERE id = :id");
+        $pdo = ConexionBD::getInstancia()->prepare("SELECT * FROM $tablaBD WHERE id = :id");
         $pdo->bindParam(":id", $id, PDO::PARAM_INT);
         $pdo->execute();
         return $pdo->fetch();
     }
 
-    // Actualizar perfil del Paciente
-    static public function ActualizarPerfilPacienteM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("UPDATE $tablaBD SET usuario = :usuario, clave = :clave, nombre = :nombre, apellido = :apellido, documento = :documento, foto = :foto WHERE id = :id");
+// Método para actualizar paciente
+static public function ActualizarPacienteM($tablaBD, $datosC) {
+    $sql = "UPDATE $tablaBD SET 
+            nombre = :nombre,
+            apellido = :apellido,
+            usuario = :usuario,
+            clave = :clave,
+            foto = :foto,
+            correo = :correo,
+            telefono = :telefono,
+            direccion = :direccion
+            WHERE id = :id";
 
-        $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
-        $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-        $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
-        $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
-        $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
-        $pdo->bindParam(":documento", $datosC["documento"], PDO::PARAM_STR);
-        $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
+    $pdo = ConexionBD::getInstancia()->prepare($sql);
 
-        if ($pdo->execute()) {
-            return true;
-        }
+    $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
+    $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
+    $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
+    $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
+    $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
+    $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
+    $pdo->bindParam(":correo", $datosC["correo"], PDO::PARAM_STR);
+    $pdo->bindParam(":telefono", $datosC["telefono"], PDO::PARAM_STR);
+    $pdo->bindParam(":direccion", $datosC["direccion"], PDO::PARAM_STR);
 
-        $pdo = null; // Asegúrate de cerrar la conexión
+    if ($pdo->execute()) {
+        return "ok";
+    } else {
+        // Mostrar el error de la base de datos
+        $errorInfo = $pdo->errorInfo();
+        return "Error en la consulta: " . $errorInfo[2];
     }
+    
+
+}
 }

@@ -1,5 +1,5 @@
 <?php
-session_start(); // Iniciar sesión
+
 
 // Verificar si el usuario es un administrador
 if ($_SESSION["rol"] != "Administrador") {

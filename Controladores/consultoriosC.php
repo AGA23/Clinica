@@ -1,23 +1,18 @@
 <?php
+require_once __DIR__ . "/../Modelos/consultoriosM.php";
 
 class ConsultoriosC {
-
     // Crear Consultorio
     public function CrearConsultorioC() {
         if (isset($_POST["consultorioN"])) {
+            $datosC = array("nombre" => $_POST["consultorioN"]);
             $tablaBD = "consultorios";
-            $consultorio = array("nombre" => $_POST["consultorioN"]);
-
-            $resultado = ConsultoriosM::CrearConsultorioM($tablaBD, $consultorio);
-
-            if ($resultado) {
+            
+            $respuesta = ConsultoriosM::CrearConsultorioM($tablaBD, $datosC);
+            
+            if ($respuesta) {
                 echo '<script>
-                    window.location = "http://localhost/clinica/consultorios";
-                </script>';
-            } else {
-                echo '<script>
-                    alert("Error al crear el consultorio.");
-                    window.location = "http://localhost/clinica/consultorios";
+                    window.location = "consultorios";
                 </script>';
             }
         }
@@ -26,80 +21,79 @@ class ConsultoriosC {
     // Ver Consultorios
     static public function VerConsultoriosC($columna, $valor) {
         $tablaBD = "consultorios";
-        $resultado = ConsultoriosM::VerConsultoriosM($tablaBD, $columna, $valor);
+        return ConsultoriosM::VerConsultoriosM($tablaBD, $columna, $valor);
+    }
 
-        if ($resultado === false || empty($resultado)) {
-            return false; // No se encontraron resultados
-        }
-
-        return $resultado;
+    // Ver Consultorios Completos
+    static public function VerConsultoriosCompletosC() {
+        return ConsultoriosM::VerConsultoriosCompletosM();
     }
 
     // Borrar Consultorio
     public function BorrarConsultorioC() {
-        if (substr($_GET["url"], 13)) {
-            $tablaBD = "consultorios";
-            $id = substr($_GET["url"], 13);
-
-            $resultado = ConsultoriosM::BorrarConsultorioM($tablaBD, $id);
-
-            if ($resultado) {
-                echo '<script>
-                    window.location = "http://localhost/clinica/consultorios";
-                </script>';
-            } else {
-                echo '<script>
-                    alert("No se puede eliminar el consultorio porque tiene doctores asociados.");
-                    window.location = "http://localhost/clinica/consultorios";
-                </script>';
+        if (isset($_GET["url"]) && $_SESSION["rol"] == "Administrador") {
+            $url = explode('/', $_GET["url"]);
+            if (end($url) == "consultorios" && isset($url[count($url)-2]) && is_numeric($url[count($url)-2])) {
+                $id = $url[count($url)-2];
+                $tablaBD = "consultorios";
+                
+                $respuesta = ConsultoriosM::BorrarConsultorioM($tablaBD, $id);
+                
+                if ($respuesta) {
+                    echo '<script>
+                        window.location = "consultorios";
+                    </script>';
+                }
             }
         }
     }
+    
 
-    // Editar Consultorio
-    public function EditarConsultoriosC() {
-        $tablaBD = "consultorios";
-        $id = substr($_GET["url"], 4);
-
-        $resultado = ConsultoriosM::EditarConsultoriosM($tablaBD, $id);
-
-        if ($resultado && is_array($resultado)) {
-            echo '<div class="form-group">
-                <h2>Nombre:</h2>
-                <input type="text" class="form-control input-lg" name="consultorioE" value="' . htmlspecialchars($resultado["nombre"]) . '">
-                <input type="hidden" class="form-control input-lg" name="Cid" value="' . htmlspecialchars($resultado["id"]) . '">
-                <br>
-                <button class="btn btn-success" type="submit">Guardar Cambios</button>
-            </div>';
-        } else {
-            echo '<script>
-                alert("Error: Consultorio no encontrado.");
-                window.location = "http://localhost/clinica/consultorios";
-            </script>';
+    public function ObtenerHorariosDoctorC() {
+        if(isset($_POST['id_doctor'])) {
+            $horarios = ConsultoriosM::ObtenerHorariosDoctor($_POST['id_doctor']);
+            echo json_encode($horarios);
         }
     }
 
-    // Actualizar Consultorio
-    public function ActualizarConsultoriosC() {
-        if (isset($_POST["consultorioE"])) {
-            $tablaBD = "consultorios";
-            $datosC = array(
-                "id" => $_POST["Cid"],
-                "nombre" => $_POST["consultorioE"]
+
+    // Cambiar Estado del Consultorio
+    public static function CambiarEstadoConsultorio() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_consultorio'])) {
+            session_start();
+            
+            if (!isset($_SESSION['id'])) {
+                echo json_encode(['success' => false, 'error' => 'Sesión no iniciada']);
+                exit;
+            }
+    
+            $id_consultorio = $_POST['id_consultorio'];
+            $fecha = $_POST['fecha'];
+            $estado = $_POST['estado'];
+            $motivo = $_POST['motivo'] ?? '';
+            $id_usuario = $_SESSION['id'];
+    
+            $resultado = ConsultoriosM::CambiarEstadoManualM(
+                $id_consultorio, 
+                $fecha, 
+                $estado, 
+                $motivo, 
+                $id_usuario
             );
-
-            $resultado = ConsultoriosM::ActualizarConsultoriosM($tablaBD, $datosC);
-
-            if ($resultado) {
-                echo '<script>
-                    window.location = "http://localhost/clinica/consultorios";
-                </script>';
-            } else {
-                echo '<script>
-                    alert("Error al actualizar el consultorio.");
-                    window.location = "http://localhost/clinica/consultorios";
-                </script>';
-            }
+    
+            echo json_encode(['success' => $resultado]);
+            exit;
         }
     }
+
+    static public function CambiarEstadoManualC($id_consultorio, $fecha, $estado, $motivo, $id_usuario) {
+        return ConsultoriosM::CambiarEstadoManualM($id_consultorio, $fecha, $estado, $motivo, $id_usuario);
+    }
+
+
 }
+
+
+
+
+?>

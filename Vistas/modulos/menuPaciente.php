@@ -1,34 +1,29 @@
 <aside class="main-sidebar">
-    <!-- sidebar: style can be found in sidebar.less -->
     <section class="sidebar">
-    
       <ul class="sidebar-menu">
-        
+        <!-- Inicio -->
         <li>
-          <a href="http://localhost/clinica/inicio">
+          <a href="<?php echo BASE_URL; ?>Vistas/dashboard.php?modulo=inicio">
             <i class="fa fa-home"></i>
             <span>Inicio</span>
           </a>
         </li>
 
+        <!-- Consultorios -->
         <li>
-          <a href="http://localhost/clinica/Ver-consultorios">
+        <a href="<?php echo BASE_URL; ?>Vistas/dashboard.php?modulo=Ver-consultorios">
             <i class="fa fa-medkit"></i>
             <span>Consultorios</span>
           </a>
         </li>
 
+        <!-- Historial -->
         <li>
-        <?php
-        echo '  <a href="http://localhost/clinica/historial/'.$_SESSION["id"].'">';
-        ?>
+          <a href="<?php echo BASE_URL; ?>Vistas/dashboard.php?modulo=historial">
             <i class="fa fa-calendar-check-o"></i>
             <span>Historial</span>
           </a>
         </li>
-
       </ul>
-
     </section>
-    <!-- /.sidebar -->
-  </aside>
+</aside>

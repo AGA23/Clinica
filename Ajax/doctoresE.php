@@ -1,46 +1,59 @@
 <?php
-session_start(); // Iniciar sesión al principio
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Verificar permisos de usuario
-if ($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Administrador") {
-    echo json_encode(["error" => "No tienes permiso para realizar esta acción"]);
+if (!isset($_SESSION["Ingresar"]) || $_SESSION["Ingresar"] !== true) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Debes iniciar sesión para realizar esta acción',
+        'redirect' => '/clinica/login'
+    ]);
     exit();
 }
 
-require_once __DIR__ . "/../Modelos/DoctoresM.php"; // Incluir el modelo
+if ($_SESSION["rol"] != "Secretaria" && $_SESSION["rol"] != "Administrador") {
+    echo json_encode([
+        'success' => false,
+        'error' => 'No tienes permisos suficientes'
+    ]);
+    exit();
+}
+
+require_once __DIR__ . "/../Modelos/DoctoresM.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["Did"])) {
-    $Did = filter_var($_POST["Did"], FILTER_VALIDATE_INT); // Validar el ID del doctor
+    $Did = filter_var($_POST["Did"], FILTER_VALIDATE_INT);
 
-    if ($Did) {
-        // Eliminar el doctor
-        $resultado = DoctoresM::BorrarDoctorM("doctores", $Did);
-
-        if ($resultado) {
-            // Respuesta JSON exitosa
-            echo json_encode([
-                'success' => true,
-                'message' => 'Doctor eliminado correctamente.'
-            ]);
-        } else {
-            // Respuesta JSON de error
-            echo json_encode([
-                'success' => false,
-                'error' => 'No se pudo eliminar el doctor.'
-            ]);
-        }
-    } else {
-        // Respuesta JSON de error si el ID no es válido
+    if (!$Did) {
         echo json_encode([
             'success' => false,
             'error' => 'ID de doctor inválido'
         ]);
+        exit();
+    }
+
+    // ✅ Eliminar tratamientos asociados
+    DoctoresM::EliminarTratamientosDoctorM($Did);
+
+    // Luego eliminar el doctor
+    $resultado = DoctoresM::BorrarDoctorM("doctores", $Did);
+
+    if ($resultado) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Doctor eliminado correctamente'
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error al eliminar el doctor'
+        ]);
     }
 } else {
-    // Respuesta JSON de error si no se proporcionó un ID
     echo json_encode([
         'success' => false,
-        'error' => 'ID de doctor no proporcionado'
+        'error' => 'Solicitud inválida'
     ]);
 }
 ?>

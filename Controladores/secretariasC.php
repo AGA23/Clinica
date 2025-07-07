@@ -4,7 +4,6 @@ require_once __DIR__ . '/../Modelos/SecretariasM.php';
 
 class SecretariasC
 {
-
     // Ingresar secretaria
     static public function IngresarSecretariaC($usuario, $clave)
     {
@@ -16,16 +15,15 @@ class SecretariasC
         }
         return false;
     }
-    
- // Método para mostrar todas las secretarias
- static public function VerSecretariasC() {
-    $tablaBD = "secretarias"; // Nombre de la tabla
 
-    // Llama al modelo para obtener las secretarias
-    $resultado = SecretariasM::VerSecretariasM($tablaBD);
+    // Método para mostrar todas las secretarias
+    static public function VerSecretariasC()
+    {
+        $tablaBD = "secretarias"; // Nombre de la tabla
+        $resultado = SecretariasM::VerSecretariasM($tablaBD);
+        return $resultado;
+    }
 
-    return $resultado;
-}
     // Ver perfil de secretaria
     static public function VerPerfilSecretariaC($id)
     {
@@ -38,20 +36,59 @@ class SecretariasC
     {
         if (isset($_POST["id"])) {
             $tablaBD = "secretarias";
+
+            // Manejar la subida de la foto
+            $foto = $_POST["fotoActual"]; // Mantener la foto actual por defecto
+            if (!empty($_FILES["foto"]["name"])) {
+                // Si se sube una nueva foto, procesarla
+                $foto = self::subirFoto($_FILES["foto"]);
+            }
+
+            // Datos a actualizar
             $datosC = array(
                 "id" => $_POST["id"],
                 "usuario" => $_POST["usuario"],
                 "clave" => $_POST["clave"],
                 "nombre" => $_POST["nombre"],
                 "apellido" => $_POST["apellido"],
-                "foto" => $_POST["foto"]
+                "foto" => $foto
             );
+
+            // Actualizar en la base de datos
             $respuesta = SecretariasM::ActualizarPerfilSecretariaM($tablaBD, $datosC);
+
             if ($respuesta == true) {
+                // Actualizar la sesión con los nuevos datos
+                $_SESSION['usuario'] = $_POST['usuario'];
+                $_SESSION['nombre'] = $_POST['nombre'];
+                $_SESSION['apellido'] = $_POST['apellido'];
+                $_SESSION['foto'] = $foto;
+
+                // Redirigir a la página de perfil
                 echo '<script>
-                window.location = "perfil-S";
+                    alert("Perfil actualizado correctamente");
+                    window.location = "perfil-Secretaria"; // Redirigir a la página de perfil
+                </script>';
+            } else {
+                echo '<script>
+                    alert("Error al actualizar el perfil");
                 </script>';
             }
+        }
+    }
+
+    // Método para subir la foto
+    static private function subirFoto($foto)
+    {
+        $rutaTemporal = $foto["tmp_name"];
+        $nombreArchivo = $foto["name"];
+        $rutaDestino = __DIR__ . "/../../Vistas/img/secretarias/" . $nombreArchivo;
+
+        // Mover el archivo a la carpeta de destino
+        if (move_uploaded_file($rutaTemporal, $rutaDestino)) {
+            return "Vistas/img/secretarias/" . $nombreArchivo; // Ruta relativa para guardar en la base de datos
+        } else {
+            return $_POST["fotoActual"]; // Mantener la foto actual si no se puede subir la nueva
         }
     }
 
@@ -120,6 +157,5 @@ class SecretariasC
             }
         }
     }
-
 }
 ?>

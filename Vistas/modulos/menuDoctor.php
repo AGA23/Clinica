@@ -1,43 +1,34 @@
+
 <aside class="main-sidebar">
+  <section class="sidebar">
+    <ul class="sidebar-menu">
 
+      <!-- Inicio -->
+      <li>
+        <a href="<?= BASE_URL ?>Vistas/dashboard.php?modulo=inicio">
+          <i class="fa fa-home"></i>
+          <span>Inicio</span>
+        </a>
+      </li>
 
+     
 
+      <!-- Citas -->
+      <li>
+        <a href="<?= BASE_URL ?>Vistas/dashboard.php?modulo=citas_doctor">
+          <i class="fa fa-calendar-check-o"></i>
+          <span>Citas</span>
+        </a>
+      </li>
 
+      <!-- Pacientes -->
+      <li>
+        <a href="<?= BASE_URL ?>Vistas/dashboard.php?modulo=Ver-pacientes">
+          <i class="fa fa-user-md"></i>
+          <span>Pacientes</span>
+        </a>
+      </li>
 
-
-
-    <!-- sidebar: style can be found in sidebar.less -->
-    <section class="sidebar">
-    
-      <ul class="sidebar-menu">
-        
-        <li>
-          <a href="http://localhost/clinica/inicio">
-            <i class="fa fa-home"></i>
-            <span>Inicio</span>
-          </a>
-        </li>
-
-        <li>
-          <?php
-          echo '<a href="http://localhost/clinica/Citas/'.$_SESSION["id"].'">';
-          ?>
-          
-            <i class="fa fa-medkit"></i>
-            <span>Citas</span>
-          </a>
-        </li>
-
-        <li>
-       
-       <a href="http://localhost/clinica/pacientes">
-            <i class="fa fa-calendar-check-o"></i>
-            <span>Pacientes</span>
-          </a>
-        </li>
-
-      </ul>
-
-    </section>
-    <!-- /.sidebar -->
-  </aside>
+    </ul>
+  </section>
+</aside>

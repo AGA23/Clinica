@@ -1,0 +1,1146 @@
+[10-Apr-2025 04:45:09 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:45:15 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:45:29 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:49:06 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:49:21 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:54:12 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:59:04 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:59:10 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 04:59:20 America/Argentina/Buenos_Aires] Error en login: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION'
+[10-Apr-2025 05:02:49 America/Argentina/Buenos_Aires] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION' in F:\XAMPP\htdocs\clinica\Modelos\loginM.php:47
+Stack trace:
+#0 F:\XAMPP\htdocs\clinica\Modelos\loginM.php(47): PDOStatement->execute(Array)
+#1 F:\XAMPP\htdocs\clinica\Controladores\loginC.php(29): LoginM::VerificarUsuario('paciente', '123')
+#2 {main}
+  thrown in F:\XAMPP\htdocs\clinica\Modelos\loginM.php on line 47
+[10-Apr-2025 05:02:54 America/Argentina/Buenos_Aires] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION' in F:\XAMPP\htdocs\clinica\Modelos\loginM.php:47
+Stack trace:
+#0 F:\XAMPP\htdocs\clinica\Modelos\loginM.php(47): PDOStatement->execute(Array)
+#1 F:\XAMPP\htdocs\clinica\Controladores\loginC.php(29): LoginM::VerificarUsuario('paciente', '123')
+#2 {main}
+  thrown in F:\XAMPP\htdocs\clinica\Modelos\loginM.php on line 47
+[10-Apr-2025 21:30:20 America/Argentina/Buenos_Aires] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION' in F:\XAMPP\htdocs\clinica\Modelos\loginM.php:47
+Stack trace:
+#0 F:\XAMPP\htdocs\clinica\Modelos\loginM.php(47): PDOStatement->execute(Array)
+#1 F:\XAMPP\htdocs\clinica\Controladores\loginC.php(29): LoginM::VerificarUsuario('paciente', '123')
+#2 {main}
+  thrown in F:\XAMPP\htdocs\clinica\Modelos\loginM.php on line 47
+[10-Apr-2025 21:35:21 America/Argentina/Buenos_Aires] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION' in F:\XAMPP\htdocs\clinica\Modelos\loginM.php:47
+Stack trace:
+#0 F:\XAMPP\htdocs\clinica\Modelos\loginM.php(47): PDOStatement->execute(Array)
+#1 F:\XAMPP\htdocs\clinica\Controladores\loginC.php(29): LoginM::VerificarUsuario('paciente', '123')
+#2 {main}
+  thrown in F:\XAMPP\htdocs\clinica\Modelos\loginM.php on line 47
+[10-Apr-2025 21:35:47 America/Argentina/Buenos_Aires] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1271 Illegal mix of collations for operation 'UNION' in F:\XAMPP\htdocs\clinica\Modelos\loginM.php:47
+Stack trace:
+#0 F:\XAMPP\htdocs\clinica\Modelos\loginM.php(47): PDOStatement->execute(Array)
+#1 F:\XAMPP\htdocs\clinica\Controladores\loginC.php(29): LoginM::VerificarUsuario('paciente', '123')
+#2 {main}
+  thrown in F:\XAMPP\htdocs\clinica\Modelos\loginM.php on line 47
+[10-Apr-2025 21:41:37 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 21:41:37 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 21:49:32 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 21:49:32 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 21:49:38 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 21:49:38 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 21:51:19 America/Argentina/Buenos_Aires] ⚠️ Login falló - No se encontraron datos para el usuario 'asd' con esa clave.
+[10-Apr-2025 21:51:45 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 21:51:45 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 21:55:43 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 21:55:43 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 22:11:53 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 22:11:53 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 22:56:33 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 22:56:33 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 23:05:06 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 23:05:06 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 23:09:45 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 23:09:45 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[10-Apr-2025 23:10:06 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[10-Apr-2025 23:10:06 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:12:48 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:12:48 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:31:27 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:31:27 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:32:15 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:32:15 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:40:26 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:40:26 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:41:11 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:41:11 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:42:29 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:42:29 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:42:36 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:42:36 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:44:40 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:44:40 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:44:45 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:44:45 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:49:08 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:49:08 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:56:19 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:56:19 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 00:56:28 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 00:56:28 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 01:00:29 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 01:00:29 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 01:00:34 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 01:00:34 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 01:01:28 America/Argentina/Buenos_Aires] ⚠️ Login falló - No se encontraron datos para el usuario 'asd' con esa clave.
+[11-Apr-2025 01:01:29 America/Argentina/Buenos_Aires] ⚠️ Login falló - No se encontraron datos para el usuario 'asd' con esa clave.
+[11-Apr-2025 01:01:30 America/Argentina/Buenos_Aires] ⚠️ Login falló - No se encontraron datos para el usuario 'asd' con esa clave.
+[11-Apr-2025 01:01:36 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 01:01:36 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 01:06:21 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 01:06:21 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[11-Apr-2025 01:12:54 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[11-Apr-2025 01:12:54 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[14-Apr-2025 01:54:15 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[14-Apr-2025 01:54:15 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[14-Apr-2025 01:55:03 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[14-Apr-2025 01:55:03 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[14-Apr-2025 01:56:07 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[14-Apr-2025 01:56:07 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[14-Apr-2025 01:56:35 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[14-Apr-2025 01:56:35 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[21-Apr-2025 00:56:49 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[21-Apr-2025 00:56:49 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[21-Apr-2025 01:42:37 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[21-Apr-2025 01:42:37 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[21-Apr-2025 01:43:30 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[21-Apr-2025 01:43:30 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[21-Apr-2025 01:52:48 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[21-Apr-2025 01:52:48 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[22-Apr-2025 17:36:03 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[22-Apr-2025 17:36:03 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[23-Apr-2025 01:38:34 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[23-Apr-2025 01:38:34 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[23-Apr-2025 02:19:12 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[23-Apr-2025 02:19:12 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[23-Apr-2025 02:33:53 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[23-Apr-2025 02:33:53 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => paciente
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[24-Apr-2025 01:51:19 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[24-Apr-2025 01:51:19 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => foto.jpg
+)
+
+[24-Apr-2025 02:36:29 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[24-Apr-2025 02:36:29 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[25-Apr-2025 03:04:27 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[25-Apr-2025 03:04:27 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 02:04:20 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 02:04:20 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 02:13:59 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 02:13:59 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 03:59:47 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 03:59:47 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 04:01:25 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 04:01:25 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 04:25:27 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 04:25:27 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 04:33:26 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 04:33:26 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[26-Apr-2025 05:30:21 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[26-Apr-2025 05:30:21 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => prueba
+    [foto] => 
+)
+
+[30-Apr-2025 00:20:11 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[30-Apr-2025 00:20:11 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre1
+    [apellido] => apellido1
+    [foto] => Vistas/img/pacientes/paciente_1_1745656447.jpeg
+)
+
+[30-Apr-2025 03:13:33 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[30-Apr-2025 03:13:33 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre1
+    [apellido] => apellido1
+    [foto] => Vistas/img/pacientes/paciente_1_1745656447.jpeg
+)
+
+[03-May-2025 02:40:49 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[03-May-2025 02:40:49 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[03-May-2025 02:41:22 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[03-May-2025 02:41:22 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => admin
+    [rol] => Administrador
+    [nombre] => Administrador
+    [apellido] => Prueba
+    [foto] => 
+)
+
+[06-May-2025 00:41:19 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 00:41:19 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 02:31:59 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 02:31:59 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 02:53:40 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 02:53:40 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 03:14:04 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 03:14:04 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 03:26:01 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 03:26:01 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 18:21:12 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 18:21:12 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[06-May-2025 23:45:14 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[06-May-2025 23:45:14 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-May-2025 03:24:49 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-May-2025 03:24:49 America/Argentina/Buenos_Aires] Array
+(
+    [id] => 1
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-May-2025 03:33:42 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-May-2025 03:33:42 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-May-2025 03:33:42 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-May-2025 03:39:06 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-May-2025 03:39:06 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-May-2025 03:39:06 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-May-2025 03:49:23 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-May-2025 03:49:23 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-May-2025 03:49:23 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[09-May-2025 01:10:25 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[09-May-2025 01:10:25 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[09-May-2025 01:10:25 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[09-May-2025 01:34:50 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[09-May-2025 01:34:50 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[09-May-2025 01:34:50 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[09-May-2025 03:18:41 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[09-May-2025 03:18:41 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[09-May-2025 03:18:41 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[09-May-2025 03:44:54 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[09-May-2025 03:44:54 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[09-May-2025 03:44:54 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[12-May-2025 00:02:36 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 00:02:36 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 
+    [id_paciente] => 1
+    [id_secretaria] => 
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => apellido
+    [foto] => Vistas/img/pacientes/paciente_1_1745656447.jpeg
+)
+
+[12-May-2025 00:02:36 America/Argentina/Buenos_Aires] 👤 ID paciente guardado en sesión: 1
+[12-May-2025 00:07:18 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 00:07:18 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[12-May-2025 00:07:18 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[12-May-2025 02:06:53 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 02:06:53 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 
+    [id_paciente] => 1
+    [id_secretaria] => 
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => apellido
+    [foto] => Vistas/img/pacientes/paciente_1_1745656447.jpeg
+)
+
+[12-May-2025 02:06:53 America/Argentina/Buenos_Aires] 👤 ID paciente guardado en sesión: 1
+[12-May-2025 02:17:55 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 02:17:55 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[12-May-2025 02:17:55 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[12-May-2025 21:47:50 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 21:47:50 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[12-May-2025 21:47:50 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[12-May-2025 23:16:46 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[12-May-2025 23:16:46 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[12-May-2025 23:16:46 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[13-May-2025 00:06:36 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[13-May-2025 00:06:36 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[13-May-2025 00:06:36 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[14-May-2025 23:40:22 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[14-May-2025 23:40:22 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[14-May-2025 23:40:22 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[15-May-2025 02:49:03 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[15-May-2025 02:49:03 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[15-May-2025 02:49:03 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[22-May-2025 17:19:18 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[22-May-2025 17:19:18 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[22-May-2025 17:19:18 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[28-May-2025 17:18:12 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[28-May-2025 17:18:12 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[28-May-2025 17:18:12 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[28-May-2025 21:51:03 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[28-May-2025 21:51:03 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[28-May-2025 21:51:03 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[24-Jun-2025 14:58:11 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[24-Jun-2025 14:58:11 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[24-Jun-2025 14:58:11 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[03-Jul-2025 15:29:33 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[03-Jul-2025 15:29:33 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[03-Jul-2025 15:29:33 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[03-Jul-2025 16:57:01 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[03-Jul-2025 16:57:01 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 
+    [id_paciente] => 1
+    [id_secretaria] => 
+    [usuario] => paciente
+    [rol] => Paciente
+    [nombre] => nombre
+    [apellido] => apellido
+    [foto] => Vistas/img/pacientes/paciente_1_1745656447.jpeg
+)
+
+[03-Jul-2025 16:57:01 America/Argentina/Buenos_Aires] 👤 ID paciente guardado en sesión: 1
+[03-Jul-2025 17:01:03 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[03-Jul-2025 17:01:03 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[03-Jul-2025 17:01:03 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-Jul-2025 00:47:51 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-Jul-2025 00:47:51 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-Jul-2025 00:47:51 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-Jul-2025 01:56:44 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-Jul-2025 01:56:44 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-Jul-2025 01:56:44 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-Jul-2025 01:57:05 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-Jul-2025 01:57:05 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-Jul-2025 01:57:05 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1
+[07-Jul-2025 02:18:57 America/Argentina/Buenos_Aires] ✅ Login exitoso - Resultado:
+[07-Jul-2025 02:18:57 America/Argentina/Buenos_Aires] Array
+(
+    [id_usuario] => 1
+    [id_admin] => 
+    [id_doctor] => 1
+    [id_paciente] => 
+    [id_secretaria] => 
+    [usuario] => doctor
+    [rol] => Doctor
+    [nombre] => Doctor
+    [apellido] => Prueba
+    [foto] => asd
+)
+
+[07-Jul-2025 02:18:57 America/Argentina/Buenos_Aires] 🩺 ID doctor guardado en sesión: 1

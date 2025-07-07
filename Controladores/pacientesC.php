@@ -1,238 +1,297 @@
 <?php
+require_once __DIR__ . '/../Modelos/pacientesM.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/clinica/config.php';
+require_once ROOT_PATH . '/Modelos/ConexionBD.php';
 
-class PacientesC{
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-    // Crear Pacientes
-    public function CrearPacienteC(){
-        if(isset($_POST["rolP"])){
+class pacientesC {
+    
+    // Método para actualizar perfil del paciente
+    public function ActualizarPerfilPacienteC() {
+        if (isset($_POST["actualizarPerfilPaciente"])) {
             $tablaBD = "pacientes";
+        
+            if (isset($_POST["idPaciente"], $_POST["nombreE"], $_POST["apellidoE"], $_POST["usuarioE"])) {
+        
+                // Ruta base para imágenes
+                $rutaImagenes = ROOT_PATH . 'Vistas/img/pacientes/';
+                $urlImagenes = BASE_URL . 'Vistas/img/pacientes/';
+        
+                // Procesar foto
+                $foto = $_POST["fotoActual"];
+                if (!empty($_FILES["fotoE"]["tmp_name"])) {
+                    if ($_FILES["fotoE"]["error"] != UPLOAD_ERR_OK) {
+                        echo '<script>
+                                alert("Error al cargar la foto.");
+                                window.location = "' . BASE_URL . 'perfil-Paciente";
+                              </script>';
+                        return;
+                    }
+    
+                    // Si ya hay una foto y se va a cambiar, eliminar la anterior
+                    if ($foto != "" && file_exists(ROOT_PATH . $foto)) {
+                        unlink(ROOT_PATH . $foto);
+                    }
+    
+                    $archivo = $_FILES["fotoE"]["tmp_name"];
+                    $nombreArchivo = $_FILES["fotoE"]["name"];
+                    $extension = pathinfo($nombreArchivo, PATHINFO_EXTENSION);
+                    $nuevoNombre = "paciente_" . $_POST["idPaciente"] . "_" . time() . "." . $extension;
+                    $destinoAbsoluto = $rutaImagenes . $nuevoNombre;
+                    $destinoRelativo = 'Vistas/img/pacientes/' . $nuevoNombre;
+    
+                    // Validar extensiones permitidas
+                    $extensionesPermitidas = array("jpg", "jpeg", "png");
+                    if (!in_array(strtolower($extension), $extensionesPermitidas)) {
+                        echo '<script>
+                                alert("Error: Solo se permiten archivos JPG, JPEG o PNG");
+                                window.location = "' . BASE_URL . 'perfil-Paciente";
+                              </script>';
+                        return;
+                    }
+    
+                    // Validar el tamaño máximo del archivo
+                    if ($_FILES["fotoE"]["size"] > 2097152) { // 2MB
+                        echo '<script>
+                                alert("Error: El archivo no debe exceder los 2MB");
+                                window.location = "' . BASE_URL . 'perfil-Paciente";
+                              </script>';
+                        return;
+                    }
+    
+                    // Mover el archivo a la carpeta destino
+                    move_uploaded_file($archivo, $destinoAbsoluto);
+                    $foto = $destinoRelativo;
+                }
+    
+                // Manejo de la contraseña
+                $clave = $_POST["claveE"];
+                $claveEncriptada = !empty($clave) ? password_hash($clave, PASSWORD_DEFAULT) : $_POST["claveActual"];
+        
+                // Preparar los datos a actualizar
+                $datosC = array(
+                    "id" => $_POST["idPaciente"],
+                    "nombre" => $_POST["nombreE"],
+                    "apellido" => $_POST["apellidoE"],
+                    "usuario" => $_POST["usuarioE"],
+                    "clave" => $claveEncriptada,
+                    "foto" => $foto,
+                    "correo" => $_POST["correoE"] ?? null,
+                    "telefono" => $_POST["telefonoE"] ?? null,
+                    "direccion" => $_POST["direccionE"] ?? null
+                );
+    
+                // Llamar al modelo para actualizar el paciente
+                $resultado = PacientesM::ActualizarPacienteM($tablaBD, $datosC);
+        
+                if ($resultado == "ok") {
+                    // Actualizar los datos en la sesión
+                    $_SESSION["nombre"] = $datosC["nombre"];
+                    $_SESSION["apellido"] = $datosC["apellido"];
+                    $_SESSION["usuario"] = $datosC["usuario"];
+                    if ($foto != "") {
+                        $_SESSION["foto"] = $foto;
+                    }
+        
+                    // Redirigir a la página de perfil
+                    header("Location: " . BASE_URL . "perfil-Paciente");
+                    exit();
+                } else {
+                    echo '<script>
+                            alert("Error al actualizar el perfil");
+                            window.location = "' . BASE_URL . 'perfil-Paciente";
+                          </script>';
+                }
+            } else {
+                echo '<script>
+                        alert("Faltan datos en el formulario.");
+                        window.location = "' . BASE_URL . 'perfil-Paciente";
+                      </script>';
+            }
+        }
+    }
+    
+    
+    public static function ListarPacientesC() {
+    try {
+        $pdo = ConexionBD::getInstancia();
+        $query = "SELECT id, nombre, apellido FROM pacientes ORDER BY nombre ASC";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error en ListarPacientesC: " . $e->getMessage());
+        return [];
+    }
+}
+
+    // Registro de nuevo paciente
+    public function CrearPacienteC() {
+        if (isset($_POST["usuario"])) {
+            $tablaBD = "pacientes";
+
+            $clave = $_POST["clave"];
+            $claveEncriptada = password_hash($clave, PASSWORD_DEFAULT); // Uso de password_hash
+
             $datosC = array(
-                "apellido" => $_POST["apellido"], 
-                "nombre" => $_POST["nombre"], 
-                "documento" => $_POST["documento"], 
-                "usuario" => $_POST["usuario"], 
-                "clave" => $_POST["clave"], 
-                "rol" => $_POST["rolP"]
+                "usuario" => $_POST["usuario"],
+                "clave" => $claveEncriptada,
+                "nombre" => $_POST["nombre"],
+                "apellido" => $_POST["apellido"],
+                "foto" => "", // Foto vacía inicialmente
+                "rol" => "Paciente" // Asignación por defecto de rol
             );
 
             $resultado = PacientesM::CrearPacienteM($tablaBD, $datosC);
 
-            if($resultado == true){
+            if ($resultado == "ok") {
                 echo '<script>
-                    window.location = "pacientes";
-                </script>';
+                        window.location = "pacientes";
+                      </script>';
             }
         }
     }
 
-    // Ver Pacientes
-    static public function VerPacientesC($columna, $valor){
+    // Ver todos los pacientes
+    public static function VerPacientesC($columna, $valor) {
         $tablaBD = "pacientes";
         $resultado = PacientesM::VerPacientesM($tablaBD, $columna, $valor);
         return $resultado;
     }
 
-    // Borrar Paciente
-    public function BorrarPacienteC(){
-        if(isset($_GET["Pid"])){
+    // Borrar paciente
+    public function BorrarPacienteC() {
+        if (isset($_GET["Pid"])) {
             $tablaBD = "pacientes";
             $id = $_GET["Pid"];
 
-            if($_GET["imgP"] != ""){
-                unlink($_GET["imgP"]);
+            if ($_GET["foto"] != "") {
+                unlink($_GET["foto"]); // Eliminar foto si existe
             }
 
             $resultado = PacientesM::BorrarPacienteM($tablaBD, $id);
 
-            if($resultado == true){
+            if ($resultado == "ok") {
                 echo '<script>
-                    window.location = "pacientes";
-                </script>';
+                        window.location = "pacientes";
+                      </script>';
             }
         }
     }
 
-    // Actualizar Paciente
-    public function ActualizarPacienteC(){
-        if(isset($_POST["Pid"])){
+    // Actualizar paciente
+    public function ActualizarPacienteC() {
+        if (isset($_POST["idPaciente"])) {
             $tablaBD = "pacientes";
+
+            $foto = $_POST["fotoActual"];
+            // Si hay una nueva foto
+            if ($_FILES["fotoE"]["tmp_name"] != "") {
+                if ($foto != "") {
+                    unlink($foto); // Borrar la foto actual
+                }
+
+                $archivo = $_FILES["fotoE"]["tmp_name"];
+                $nombreArchivo = basename($_FILES["fotoE"]["name"]);
+                $destino = "Vistas/img/pacientes/" . $nombreArchivo;
+
+                move_uploaded_file($archivo, $destino);
+                $foto = $destino;
+            }
+
+            // Actualización de la clave
+            $clave = $_POST["claveE"];
+            $claveEncriptada = ($clave != "") ? password_hash($clave, PASSWORD_DEFAULT) : $_POST["claveActual"];
+
             $datosC = array(
-                "id" => $_POST["Pid"], 
-                "apellido" => $_POST["apellidoE"], 
-                "nombre" => $_POST["nombreE"], 
-                "documento" => $_POST["documentoE"], 
-                "usuario" => $_POST["usuarioE"], 
-                "clave" => $_POST["claveE"]
+                "id" => $_POST["idPaciente"],
+                "usuario" => $_POST["usuarioE"],
+                "clave" => $claveEncriptada,
+                "nombre" => $_POST["nombreE"],
+                "apellido" => $_POST["apellidoE"],
+                "foto" => $foto
             );
 
             $resultado = PacientesM::ActualizarPacienteM($tablaBD, $datosC);
-            
-            if($resultado == true){
+
+            if ($resultado == "ok") {
                 echo '<script>
-                    window.location = "pacientes";
-                </script>';
+                        window.location = "perfil-Paciente";
+                      </script>';
             }
         }
     }
 
-    // Ingreso de los Pacientes
-    public function IngresarPacienteC(){
-        if(isset($_POST["usuario-Ing"])){
-            // Validar el formato del usuario y contraseña
-            if(preg_match('/^[a-zA-Z0-9]+$/', $_POST["usuario-Ing"]) && preg_match('/^[a-zA-Z0-9]+$/', $_POST["clave-Ing"])){
-                $tablaBD = "pacientes";
-                $datosC = array("usuario" => $_POST["usuario-Ing"], "clave" => $_POST["clave-Ing"]);
-
-                // Llamar a la función para ingresar al paciente
-                $resultado = PacientesM::IngresarPacienteM($tablaBD, $datosC);
-
-                // Verificar si se encontró el usuario
-                if ($resultado) {
-                    // Comprobar la contraseña
-                    if ($resultado["clave"] === $datosC["clave"]) {
-                        // Iniciar sesión
-                        $_SESSION["Ingresar"] = true;
-                        $_SESSION["id"] = $resultado["id"];
-                        $_SESSION["usuario"] = $resultado["usuario"];
-                        $_SESSION["clave"] = $resultado["clave"];
-                        $_SESSION["apellido"] = $resultado["apellido"];
-                        $_SESSION["nombre"] = $resultado["nombre"];
-                        $_SESSION["documento"] = $resultado["documento"];
-                        $_SESSION["foto"] = $resultado["foto"];
-                        $_SESSION["rol"] = $resultado["rol"];
-
-                        echo '<script>
-                            window.location = "inicio";
-                        </script>';
-                    } else {
-                        // Contraseña incorrecta
-                        echo '<script>alert("Contraseña incorrecta.");</script>';
-                    }
-                } else {
-                    // Usuario no encontrado
-                    echo '<script>alert("Usuario no encontrado.");</script>';
-                }
-            } else {
-                echo '<script>alert("El usuario y la contraseña solo pueden contener letras y números.");</script>';
-            }
-        }
-    }
-
-    // Ver perfil del paciente
-    public function VerPerfilPacienteC(){
-        $tablaBD = "pacientes";
-        $id = $_SESSION["id"];
-        $resultado = PacientesM::VerPerfilPacienteM($tablaBD, $id);
-
-        echo '<tr>
-                <td>'.$resultado["usuario"].'</td>
-                <td>'.$resultado["clave"].'</td>
-                <td>'.$resultado["nombre"].'</td>
-                <td>'.$resultado["apellido"].'</td>';
-
-        if($resultado["foto"] == ""){
-            echo '<td><img src="Vistas/img/defecto.png" width="40px"></td>';
-        } else {
-            echo '<td><img src="'.$resultado["foto"].'" width="40px"></td>';
-        }
-
-        echo '<td>'.$resultado["documento"].'</td>
-              <td>
-                  <a href="http://localhost/clinica/perfil-P/'.$resultado["id"].'">
-                      <button class="btn btn-success"><i class="fa fa-pencil"></i></button>
-                  </a>
-              </td>
-            </tr>';
-    }
-
-    // Editar Perfil Paciente
-    public function EditarPerfilPacienteC(){
-        $tablaBD = "pacientes";
-        $id = $_SESSION["id"];
-        $resultado = PacientesM::VerPerfilPacienteM($tablaBD, $id);
-
-        echo '<form method="post" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-md-6 col-xs-12">
-                        <h2>Nombre:</h2>
-                        <input type="text" class="input-lg" name="nombrePerfil" value="'.$resultado["nombre"].'">
-                        <input type="hidden" class="input-lg" name="Pid" value="'.$resultado["id"].'">
-
-                        <h2>Apellido:</h2>
-                        <input type="text" class="input-lg" name="apellidoPerfil" value="'.$resultado["apellido"].'">
-
-                        <h2>Usuario:</h2>
-                        <input type="text" class="input-lg" name="usuarioPerfil" value="'.$resultado["usuario"].'">
-
-                        <h2>Clave:</h2>
-                        <input type="text" class="input-lg" name="clavePerfil" value="'.$resultado["clave"].'">
-
-                        <h2>Documento:</h2>
-                        <input type="text" class="input-lg" name="documentoPerfil" value="'.$resultado["documento"].'">
-                    </div>
-
-                    <div class="col-md-6 col-xs-12">
-                        <br><br>
-                        <input type="file" name="imgPerfil">
-                        <br>';
-
-                        if($resultado["foto"] != ""){
-                            echo '<img src="http://localhost/clinica/'.$resultado["foto"].'" width="200px" class="img-responsive">';
-                        } else {
-                            echo '<img src="http://localhost/clinica/Vistas/img/defecto.png" width="200px" class="img-responsive">';
-                        }
-
-                        echo '<input type="hidden" name="imgActual" value="'.$resultado["foto"].'">
-                              <br><br>
-                              <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                    </div>
-                </div>
-            </form>';
-    }
-
-    // Actualizar Perfil del Paciente
-    public function ActualizarPerfilPacienteC(){
-        if(isset($_POST["Pid"])){
-            $rutaImg = $_POST["imgActual"];
-
-            if(isset($_FILES["imgPerfil"]["tmp_name"]) && !empty($_FILES["imgPerfil"]["tmp_name"])){
-                if(!empty($_POST["imgActual"])){
-                    unlink($_POST["imgActual"]);
-                }
-
-                if($_FILES["imgPerfil"]["type"] == "image/png"){
-                    $nombre = mt_rand(100,999);
-                    $rutaImg = "Vistas/img/Pacientes/Paciente".$nombre.".png";
-                    $foto = imagecreatefrompng($_FILES["imgPerfil"]["tmp_name"]);
-                    imagepng($foto, $rutaImg);
-                }
-
-                if($_FILES["imgPerfil"]["type"] == "image/jpeg"){
-                    $nombre = mt_rand(100,999);
-                    $rutaImg = "Vistas/img/Pacientes/Paciente".$nombre.".jpg";
-                    $foto = imagecreatefromjpeg($_FILES["imgPerfil"]["tmp_name"]);
-                    imagejpeg($foto, $rutaImg);
-                }
-            }
-
+    // Iniciar sesión del paciente
+    public function IngresoPacienteC() {
+        if (isset($_POST["usuario-Ing"])) {
             $tablaBD = "pacientes";
             $datosC = array(
-                "id" => $_POST["Pid"], 
-                "nombre" => $_POST["nombrePerfil"], 
-                "apellido" => $_POST["apellidoPerfil"], 
-                "usuario" => $_POST["usuarioPerfil"], 
-                "clave" => $_POST["clavePerfil"], 
-                "documento" => $_POST["documentoPerfil"], 
-                "foto" => $rutaImg
+                "usuario" => $_POST["usuario-Ing"]
             );
 
-            $resultado = PacientesM::ActualizarPerfilPacienteM($tablaBD, $datosC);
+            $resultado = PacientesM::IngresoPacienteM($tablaBD, $datosC);
 
-            if($resultado == true){
+            if ($resultado && password_verify($_POST["clave-Ing"], $resultado["clave"])) { // Uso de password_verify
+                session_start();
+                $_SESSION["Ingresar"] = true;
+                $_SESSION["id"] = $resultado["id"];
+                $_SESSION["usuario"] = $resultado["usuario"];
+                $_SESSION["nombre"] = $resultado["nombre"];
+                $_SESSION["apellido"] = $resultado["apellido"];
+                $_SESSION["foto"] = $resultado["foto"];
+                $_SESSION["rol"] = "Paciente";
+
                 echo '<script>
-                    window.location = "http://localhost/clinica/perfil-P/'.$_SESSION["id"].'";
-                </script>';
+                        window.location = "inicio";
+                      </script>';
+            } else {
+                echo '<br><div class="alert alert-danger">Error al Ingresar</div>';
             }
         }
     }
+
+    // Obtener datos del perfil del paciente actual
+    public function VerPerfilPacienteC() {
+        if (isset($_SESSION["id"])) {
+            $tablaBD = "pacientes";
+            $id = $_SESSION["id"];
+            $respuesta = PacientesM::VerPerfilPacienteM($tablaBD, $id);
+            return $respuesta;
+        }
+
+        return null;
+    }
+
+    public static function ObtenerNombreCompletoPaciente($id) {
+        // Usar getInstancia en lugar de cBD
+        $pdo = ConexionBD::getInstancia()->prepare("SELECT nombre FROM pacientes WHERE id = ?");
+        $pdo->execute([$id]);
+        $paciente = $pdo->fetch();
+    
+        return $paciente ? $paciente["nombre"] : '';
+    }
+    // Obtener medicamentos de un paciente (crónicos y no crónicos)
+public function ObtenerMedicamentosPacienteC($id_paciente)
+{
+    return MedicamentosM::ObtenerPorPaciente($id_paciente);
 }
+
+// Obtener tratamientos asociados a un doctor
+public function ObtenerTratamientosPorDoctorC($id_doctor)
+{
+    return TratamientosM::ObtenerPorDoctor($id_doctor);
+}
+
+// Guardar medicamento para un paciente (nuevo o desde finalización de cita)
+public function GuardarMedicamentoPacienteC($id_paciente, $datos)
+{
+    return MedicamentosM::GuardarParaCita($id_paciente, $datos);
+}
+
+    
+}
+?>
