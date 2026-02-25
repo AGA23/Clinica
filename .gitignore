@@ -1,0 +1,48 @@
+# =========================
+# DEPENDENCIAS
+# =========================
+vendor/
+node_modules/
+
+# =========================
+# CONFIGURACION SENSIBLE
+# =========================
+.env
+config.php
+
+# =========================
+# ARCHIVOS SUBIDOS
+# =========================
+Vistas/img/
+Vistas/img/secretarios/
+Vistas/img/doctores/
+
+# =========================
+# BASE DE DATOS
+# =========================
+*.sql
+*.mwb
+
+# =========================
+# LOGS Y TEMPORALES
+# =========================
+*.log
+*.tmp
+cache/
+
+# =========================
+# ARCHIVOS COMPRIMIDOS
+# =========================
+*.zip
+*.rar
+
+# =========================
+# EDITORES
+# =========================
+.vscode/
+
+# =========================
+# SISTEMA
+# =========================
+Thumbs.db
+.DS_Store

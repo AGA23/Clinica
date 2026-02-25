@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    Options -Indexes
+    RewriteEngine On
+    RewriteBase /clinica/
+    
+    # --- REGLA 1: ENRUTADOR AJAX (MÁS ESPECÍFICA, SE EJECUTA PRIMERO) ---
+    # Si la URL empieza exactamente con "ajax/", la redirige a ajax.php y se detiene.
+    RewriteRule ^ajax/(.*)$ ajax.php?url=$1 [QSA,L]
+
+    # --- REGLA 2: ENRUTADOR DE VISTAS (TU REGLA ORIGINAL) ---
+    # Si la petición no es a un archivo o directorio que ya existe...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # ...y NO fue capturada por la regla AJAX, la redirige a index.php.
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>
