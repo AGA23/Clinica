@@ -1,11 +1,10 @@
 <?php
+// Este archivo ahora actúa como un simple "lanzador".
+// No contiene HTML. Su única responsabilidad es crear una instancia
+// del controlador de inicio y llamar al método principal.
 
-$inicio = new InicioC();
-$inicio->MostrarInicioC();
+// El autoloader (desde loader.php) se encargará de encontrar la clase InicioC.
+$inicioController = new InicioC();
+$inicioController->MostrarInicioC();
 
-if ($_SESSION["rol"] === "Administrador") {
-    echo '<a href="' . BASE_URL . 'admin/editar-inicio" class="btn btn-success btn-lg">Editar</a>';
-}
-
-echo '<a href="' . BASE_URL . strtolower($_SESSION["rol"]) . '/perfil" class="btn btn-primary btn-lg">Ver Perfil</a>';
 ?>

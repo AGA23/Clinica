@@ -1,85 +1,119 @@
 <?php
-// Configuración de errores
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// =============================
+// index.php - VERSION FINAL
+// =============================
 
-// Configuración base
-require_once __DIR__ . '/config.php';
+// Cargar entorno
+require_once __DIR__ . '/loader.php';
 
-ob_start();
+// Enrutador
+$url = $_GET['url'] ?? 'inicio';
+if ($url === '') $url = 'inicio';
 
-// Iniciar sesión si no está activa
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Detectar si el usuario está en la vista de login
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$isLoginPage = strpos($requestUri, 'plantilla.php') !== false;
-
-// Si NO está autenticado, redirigir al login
-if (!isset($_SESSION["Ingresar"])) {
-    if (!$isLoginPage) {
-        header("Location: " . BASE_URL . "Vistas/plantilla.php");
-        exit();
-    }
-} 
-// Si SÍ está autenticado, redirigir según el rol
-else {
-    $rol = $_SESSION["rol"] ?? '';
-
-    // Evitar que usuarios autenticados vean el login
-    if ($isLoginPage) {
-        switch ($rol) {
-            case 'Administrador':
-                header("Location: " . BASE_URL . "Vistas/dashboard.php?modulo=inicio");
-                break;
-            case 'Doctor':
-                header("Location: " . BASE_URL . "Vistas/dashboard.php?modulo=inicioDoctor");
-                break;
-            case 'Secretaria':
-                header("Location: " . BASE_URL . "Vistas/dashboard.php?modulo=inicioSecretaria");
-                break;
-            case 'Paciente':
-                header("Location: " . BASE_URL . "Vistas/dashboard.php?modulo=inicioPaciente");
-                break;
-            default:
-                session_destroy();
-                header("Location: " . BASE_URL . "Vistas/plantilla.php?error=3");
-        }
-        exit();
-    }
-}
-
-// Si llegó al login directamente
-if ($isLoginPage) {
-    ob_end_clean(); // Limpia el buffer
-    require __DIR__ . '/Vistas/plantilla.php';
+// =====================================================================
+//  EXPORTAR EXCEL (ANTES DE MOSTRAR NADA)
+// =====================================================================
+if ($url === 'exportar-reportes' && ($_GET['action'] ?? '') === 'exportar_excel') {
+    require_once __DIR__ . '/Controladores/ReportesC.php';
+    (new ReportesC())->manejarExportarExcelGET();
     exit();
 }
 
-// Lógica de enrutamiento por acción (para formularios como actualizarPerfil)
-if (isset($_GET["action"])) {
-    $action = $_GET["action"];
-    
-    switch ($action) {
-        case "actualizarPerfil":
-            require_once ROOT_PATH . "Controladores/pacientesC.php";
-            require_once ROOT_PATH . "Modelos/pacientesM.php";
 
-            $paciente = new PacientesC();
-            $paciente->ActualizarPerfilPacienteC();
-            exit(); // <- importante para evitar que cargue otras vistas
-            break;
 
-        default:
-            echo "Acción no reconocida.";
-            exit();
-    }
+// =====================================================================
+// LOGIN
+// =====================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['usuario-Ing'])) {
+    (new LoginC())->procesarLogin();
 }
 
+if (!isset($_SESSION['Ingresar']) || $_SESSION['Ingresar'] !== true) {
+    require_once __DIR__ . '/Vistas/login.php';
+    exit();
+}
 
-// Carga el dashboard para cualquier otra ruta
-require __DIR__ . '/Vistas/dashboard.php';
-ob_end_flush();
+// =====================================================================
+// CARGA DE PLANTILLA
+// =====================================================================
+
+$rol = $_SESSION['rol'];
+
+$mapa_menus = [
+    'Administrador' => 'menuAdmin.php',
+    'Doctor'        => 'menuDoctor.php',
+    'Paciente'      => 'menuPaciente.php',
+    'Secretario'    => 'menuSecretarios.php',
+];
+
+if (!isset($mapa_menus[$rol])) {
+    die("Error: Rol no definido.");
+}
+
+$menuPath   = VIEWS_PATH . "modulos/" . $mapa_menus[$rol];
+$moduloPath = VIEWS_PATH . "modulos/" . $url . ".php";
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Clínica - <?= htmlspecialchars($rol) ?></title>
+    <base href="<?= BASE_URL ?>">
+
+    <script>
+        const BASE_URL = "<?= BASE_URL ?>";
+    </script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="Vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="Vistas/bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="Vistas/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="Vistas/bower_components/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="Vistas/dist/css/AdminLTE.min.css">
+    <link rel="stylesheet" href="Vistas/dist/css/skins/skin-blue.min.css">
+    <link rel="stylesheet" href="Vistas/plugins/sweetalert2/sweetalert2.min.css">
+    <link rel="stylesheet" href="Vistas/bower_components/fullcalendar/dist/fullcalendar.min.css">
+</head>
+
+
+
+
+<body class="hold-transition skin-blue sidebar-mini">
+
+
+
+<div class="wrapper">
+
+    <?php include VIEWS_PATH . 'modulos/cabecera.php'; ?>
+    <?php include $menuPath; ?>
+
+    <div class="content-wrapper">
+        <?php include $moduloPath; ?>
+    </div>
+
+    <footer class="main-footer">
+        <strong>Clínica © <?= date('Y') ?></strong>
+    </footer>
+
+</div>
+
+<!-- JS (orden correcto) -->
+<script src="Vistas/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="Vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="Vistas/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="Vistas/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<script src="Vistas/bower_components/select2/dist/js/select2.full.min.js"></script>
+<script src="Vistas/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+
+<script src="Vistas/bower_components/moment/moment.js"></script>
+<script src="Vistas/bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
+<script src="Vistas/bower_components/fullcalendar/dist/locale/es.js"></script>
+
+<!-- Calendario-admin.js CORRECTAMENTE UBICADO -->
+<script src="Vistas/js/calendario-admin.js"></script>
+
+<script src="Vistas/dist/js/adminlte.min.js"></script>
+
+<?php if(isset($scriptDinamico)) echo $scriptDinamico; ?>
+</body>
+</html>

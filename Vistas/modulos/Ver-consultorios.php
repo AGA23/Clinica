@@ -1,198 +1,259 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// En Vistas/modulos/Ver-consultorios.php (VERSIÓN ADAPTADA — apariencia original, mejoras aplicadas)
+
+// --- 1. OBTENCIÓN Y AGRUPACIÓN DE DATOS PARA EL DIRECTORIO DE DOCTORES ---
+$directorio_completo = ConsultoriosC::VerDirectorioMedicoC();
+$consultorios_agrupados = [];
+
+// La lógica agrupa a los doctores por el nombre de su consultorio.
+// NUEVO: procesa el campo estado + motivo (estado_motivo_manual_hoy) si viene.
+if (is_array($directorio_completo)) {
+    foreach ($directorio_completo as $doctor) {
+        $nombre_consultorio = $doctor['nombre_consultorio'];
+
+        // Procesamos estado|motivo (si existe) — formato esperado: "cerrado|por mantenimiento"
+        $estado_motivo_raw = $doctor['estado_motivo_manual_hoy'] ?? null;
+        $estado_manual = null;
+        $motivo_manual = null;
+        if ($estado_motivo_raw) {
+            $partes = explode('|', $estado_motivo_raw, 2);
+            $estado_manual = trim($partes[0]);
+            $motivo_manual = isset($partes[1]) ? trim($partes[1]) : null;
+        }
+
+        if (!isset($consultorios_agrupados[$nombre_consultorio])) {
+            $consultorios_agrupados[$nombre_consultorio] = [
+                'nombre'         => $nombre_consultorio,
+                'direccion'      => $doctor['direccion_consultorio'],
+                'telefono'       => $doctor['telefono_consultorio'],
+                'email'          => $doctor['email_consultorio'],
+                'estado_manual'  => $estado_manual,   // guardamos solo el estado (o null)
+                'motivo_manual'  => $motivo_manual,   // guardamos el motivo (o null)
+                'doctores'       => []
+            ];
+        } else {
+            // Si ya existe la entrada, y no tiene estado_manual todavía, pero este doctor sí trae info,
+            // preferimos conservar el estado_manual si ya estaba; si no, asignamos el nuevo.
+            if (empty($consultorios_agrupados[$nombre_consultorio]['estado_manual']) && $estado_manual) {
+                $consultorios_agrupados[$nombre_consultorio]['estado_manual'] = $estado_manual;
+                $consultorios_agrupados[$nombre_consultorio]['motivo_manual'] = $motivo_manual;
+            }
+        }
+
+        // Añadimos el doctor actual a la lista de su consultorio correspondiente.
+        $consultorios_agrupados[$nombre_consultorio]['doctores'][] = $doctor;
+    }
 }
 
-if (!defined('BASE_URL')) {
-    define('BASE_URL', '/clinica/');
+// --- 2. OBTENER Y PROCESAR DATOS PARA LA GRILLA DE HORARIOS DE SEDES ---
+$horarios_consultorios_raw = ConsultoriosC::VerHorariosConsultoriosC();
+$horarios_por_consultorio = [];
+$dias_semana_nombres = ['1' => 'Lunes', '2' => 'Martes', '3' => 'Miércoles', '4' => 'Jueves', '5' => 'Viernes', '6' => 'Sábado', '7' => 'Domingo'];
+
+if (is_array($horarios_consultorios_raw)) {
+    foreach ($horarios_consultorios_raw as $horario) {
+        $nombre = $horario['nombre_consultorio'];
+        $dia = $horario['dia_semana'];
+        $hora_formateada = date("g:i A", strtotime($horario['hora_apertura'])) . ' - ' . date("g:i A", strtotime($horario['hora_cierre']));
+        $horarios_por_consultorio[$nombre][$dia] = $hora_formateada;
+    }
 }
 
-$rolesPermitidos = ["Secretaria", "Administrador", "Doctor", "Paciente"];
-if (!isset($_SESSION["Ingresar"]) || $_SESSION["Ingresar"] !== true || !in_array($_SESSION["rol"], $rolesPermitidos)) {
-    header("Location: " . BASE_URL . "login");
-    exit();
-}
-
-require_once __DIR__ . "/../../Controladores/ConsultoriosC.php";
-
-try {
-    $consultorios = ConsultoriosC::VerConsultoriosCompletosC();
-} catch (PDOException $e) {
-    $error = ($_SESSION["rol"] == "Administrador") ? $e->getMessage() : "Error al cargar consultorios";
-    $consultorios = [];
-}
-
-function estaEnHorarioApertura($horariosStr) {
-    if (empty($horariosStr)) return false;
-    $horarios = explode('|', $horariosStr);
-    $diaActual = (int) date('N');
-    $horaActual = (int) date('H') * 60 + (int) date('i');
-
-    foreach ($horarios as $horario) {
-        $partes = explode(':', $horario);
-        if (count($partes) < 7) continue;
-
-        [$dia, $hIniH, $hIniM, , $hFinH, $hFinM] = array_map('intval', $partes);
-        if ($dia === $diaActual) {
-            $horaInicio = $hIniH * 60 + $hIniM;
-            $horaFin = $hFinH * 60 + $hFinM;
-            return ($horaInicio <= $horaActual && $horaActual <= $horaFin);
+// --- 3. FUNCIÓN DE FORMATEO DE HORARIOS DE DOCTOR ---
+function formatearHorariosDoctor($horariosStr) {
+    if (empty($horariosStr)) {
+        return '<li class="list-group-item">Horarios no disponibles</li>';
+    }
+    $dias_semana_nombres = ['1' => 'Lunes', '2' => 'Martes', '3' => 'Miércoles', '4' => 'Jueves', '5' => 'Viernes', '6' => 'Sábado', '7' => 'Domingo'];
+    $html_items = [];
+    $horarios_individuales = explode('|', $horariosStr);
+    foreach ($horarios_individuales as $horario) {
+        $partes = explode(';', $horario);
+        if (count($partes) === 3) {
+            $dia_idx = $partes[0];
+            $hora_inicio_formateada = date("g:i A", strtotime($partes[1]));
+            $hora_fin_formateada = date("g:i A", strtotime($partes[2]));
+            if (isset($dias_semana_nombres[$dia_idx])) {
+                $html_items[] = '<li class="list-group-item"><strong>' . $dias_semana_nombres[$dia_idx] . ':</strong><span class="pull-right">' . $hora_inicio_formateada . ' - ' . $hora_fin_formateada . '</span></li>';
+            }
         }
     }
-    return false;
+    return empty($html_items) ? '<li class="list-group-item">Horarios no disponibles</li>' : implode('', $html_items);
 }
 
-function formatearHorario($horariosStr) {
-    if (empty($horariosStr)) return '<span class="text-muted">Sin horario</span>';
-
-    $dias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    $diaActual = (int) date('N');
-    $horarios = explode('|', $horariosStr);
-
-    foreach ($horarios as $horario) {
-        $partes = explode(':', $horario);
-        if (count($partes) < 7) continue;
-
-        $dia = (int) $partes[0];
-        if ($dia === $diaActual) {
-            return sprintf(
-                '%s %02d:%02d - %02d:%02d',
-                $dias[$dia - 1],
-                $partes[1], $partes[2],
-                $partes[4], $partes[5]
-            );
-        }
+// --- 4. FUNCIÓN PARA MOSTRAR TRATAMIENTOS COMO ETIQUETAS ---
+function mostrarTratamientosComoEtiquetas($tratamientos_str) {
+    if (empty($tratamientos_str)) {
+        return '<span class="text-muted">No especificados</span>';
     }
-    return '<span class="text-muted">Cerrado hoy</span>';
+    $tratamientos = explode(',', $tratamientos_str);
+    $html = '';
+    foreach ($tratamientos as $tratamiento) {
+        $html .= '<span class="label label-info">' . htmlspecialchars(trim($tratamiento)) . '</span> ';
+    }
+    return $html;
 }
 ?>
 
 <section class="content-header">
-    <h1>Consultorios</h1>
-    <ol class="breadcrumb">
-        <li><a href="<?= BASE_URL ?>inicio"><i class="fa fa-home"></i> Inicio</a></li>
-        <li class="active">Consultorios</li>
-    </ol>
+    <h1>Directorio Médico y Horarios de la Clínica</h1>
+    <ol class="breadcrumb"><li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li><li class="active">Directorio</li></ol>
 </section>
 
 <section class="content">
-    <?php if (!empty($error)): ?>
-    <div class="alert alert-danger">
-        <i class="fa fa-warning"></i> <?= $error ?>
-    </div>
-    <?php endif; ?>
-
     <div class="box box-primary">
-        <?php if (in_array($_SESSION["rol"], ["Secretaria", "Administrador"])): ?>
-        <div class="box-header">
-            <button class="btn btn-primary" data-toggle="modal" data-target="#modal-nuevo-consultorio">
-                <i class="fa fa-plus"></i> Nuevo Consultorio
-            </button>
-        </div>
-        <?php endif; ?>
-
+        <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-clock-o"></i> Horarios de Operación por Sede</h3></div>
         <div class="box-body">
-            <table class="table table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nombre</th>
-                        <th>Médico</th>
-                        <th>Horario</th>
-                        <th>Estado</th>
-                        <?php if (in_array($_SESSION["rol"], ["Secretaria", "Administrador"])): ?>
-                        <th>Acciones</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($consultorios as $i => $cons): 
-                        $estadoAuto = estaEnHorarioApertura($cons['horario_consultorio'] ?? '') ? 'Abierto' : 'Cerrado';
-                        $estadoFinal = $cons['estado_manual'] ?? $estadoAuto;
-                        $esManual = isset($cons['estado_manual']);
-                    ?>
-                    <tr>
-                        <td><?= $i + 1 ?></td>
-                        <td><?= htmlspecialchars($cons['consultorio'] ?? '') ?></td>
-                        <td><?= !empty($cons['medico']) ? htmlspecialchars($cons['medico']) : '<span class="text-muted">No asignado</span>' ?></td>
-                        <td><?= formatearHorario($cons['horario_consultorio'] ?? '') ?></td>
-                        <td>
-                            <span class="label estado-<?= $estadoFinal ?> <?= $esManual ? 'estado-manual' : '' ?>">
-                                <?= $estadoFinal ?>
-                            </span>
-                        </td>
-                        <?php if (in_array($_SESSION["rol"], ["Secretaria", "Administrador"])): ?>
-                        <td>
-                            <a href="<?= BASE_URL ?>consultorios/editar/<?= $cons['id'] ?>" class="btn btn-xs btn-success">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                            <button class="btn btn-xs btn-warning btn-cambiar-estado" 
-                                    data-id="<?= $cons['id'] ?>"
-                                    data-nombre="<?= htmlspecialchars($cons['consultorio'] ?? '') ?>">
-                                <i class="fa fa-exchange"></i>
-                            </button>
-                        </td>
-                        <?php endif; ?>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?php if (empty($horarios_por_consultorio)): ?>
+                <div class="alert alert-warning">No se encontraron horarios generales definidos para las sedes.</div>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover text-center">
+                        <thead><tr style="background-color: #f8f8f8;"><th class="text-left">Sede</th><?php foreach ($dias_semana_nombres as $nombre_dia): ?><th><?= $nombre_dia ?></th><?php endforeach; ?></tr></thead>
+                        <tbody>
+                            <?php foreach ($horarios_por_consultorio as $nombre_consultorio => $horarios): ?>
+                                <?php 
+                                // Tomamos estado y motivo desde la agrupación (si existe)
+                                $estado_manual_hoy = $consultorios_agrupados[$nombre_consultorio]['estado_manual'] ?? null;
+                                $motivo_manual_hoy = $consultorios_agrupados[$nombre_consultorio]['motivo_manual'] ?? null;
+                                ?>
+                                <tr>
+                                    <td class="text-left">
+                                        <strong><?= htmlspecialchars($nombre_consultorio) ?></strong>
+                                        <?php if ($estado_manual_hoy): ?>
+                                            <!-- estado manual mostrado en la celda de la sede (misma apariencia original) -->
+                                            <span class="label label-danger pull-right" style="font-size: 12px; margin-top: 3px;" data-toggle="tooltip" title="<?= htmlspecialchars($motivo_manual_hoy) ?>">
+                                                <i class="fa fa-warning"></i> Hoy: <?= htmlspecialchars(ucfirst($estado_manual_hoy)) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php for ($i = 1; $i <= 7; $i++): ?>
+                                        <td>
+                                            <?php if ($estado_manual_hoy): ?>
+                                                <!-- Si hay estado manual, mostramos el estado (con motivo en tooltip) en lugar del horario -->
+                                                <span class="label label-default" data-toggle="tooltip" title="<?= htmlspecialchars($motivo_manual_hoy) ?>">
+                                                    <?= htmlspecialchars(ucfirst($estado_manual_hoy)) ?>
+                                                </span>
+                                            <?php elseif (isset($horarios[$i])): ?>
+                                                <!-- Mantener estilo original para horarios -->
+                                                <span class="label bg-green"><?= $horarios[$i] ?></span>
+                                            <?php else: ?>
+                                                <span class="text-muted">Cerrado</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    <?php endfor; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
+    </div>
+
+    <div class="box box-solid">
+        <div class="box-header with-border"><h3 class="box-title"><i class="fa fa-user-md"></i> Directorio de Profesionales por Sede</h3></div>
+        <div class="box-body">
+            <div class="row">
+                <div class="col-md-6"><div class="form-group"><label>Buscar Doctor por Nombre:</label><div class="input-group"><span class="input-group-addon"><i class="fa fa-search"></i></span><input type="text" id="filtro-nombre" class="form-control" placeholder="Escriba un nombre..."></div></div></div>
+                <div class="col-md-6"><div class="form-group"><label>Filtrar por Tratamiento:</label><div class="input-group"><span class="input-group-addon"><i class="fa fa-tags"></i></span><input type="text" id="filtro-tratamiento" class="form-control" placeholder="Escriba un tratamiento..."></div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="directorio-medico-container">
+        <?php if (empty($consultorios_agrupados)): ?>
+             <div class="col-xs-12"><div class="alert alert-info">No hay doctores disponibles en el directorio en este momento.</div></div>
+        <?php else: ?>
+            <?php foreach ($consultorios_agrupados as $data): ?>
+                <div class="col-md-12">
+                    <h2 class="page-header" style="border-color: #3c8dbc; margin-top: 20px; margin-bottom: 20px;">
+                        <i class="fa fa-hospital-o"></i> <?= htmlspecialchars($data['nombre']) ?>
+                        <small class="pull-right" style="font-size: 14px; color: #666;">
+                            <i class="fa fa-map-marker"></i> <?= htmlspecialchars($data['direccion'] ?? 'Dirección no disponible') ?> | 
+                            <i class="fa fa-phone"></i> <?= htmlspecialchars($data['telefono'] ?? 'Teléfono no disponible') ?>
+                        </small>
+                    </h2>
+                </div>
+                <?php if (empty($data['doctores'])): ?>
+                    <div class="col-md-12"><p class="text-muted" style="margin-left: 15px;">No hay doctores asignados a esta sede.</p></div>
+                <?php else: ?>
+                    <?php foreach ($data['doctores'] as $doctor): ?>
+                        <div class="col-md-6 doctor-card" 
+                             data-nombre="<?= strtolower(htmlspecialchars($doctor['nombre_doctor'])) ?>" 
+                             data-tratamientos="<?= strtolower(htmlspecialchars($doctor['tratamientos_doctor'] ?? '')) ?>">
+                            <div class="box box-widget widget-user">
+                                <div class="widget-user-header bg-aqua-active">
+                                    <h3 class="widget-user-username"><?= htmlspecialchars($doctor['nombre_doctor']) ?></h3>
+                                    <h5 class="widget-user-desc">&nbsp;</h5>
+                                </div>
+                                <div class="widget-user-image">
+                                    <img class="img-circle" 
+                                         src="<?= !empty($doctor['foto_doctor']) ? BASE_URL . $doctor['foto_doctor'] : BASE_URL . 'Vistas/img/user-default.png' ?>" 
+                                         alt="Foto del Doctor">
+                                </div>
+                                <div class="box-footer">
+                                    <div class="row">
+                                        <div class="col-sm-12 border-bottom">
+                                            <div class="description-block">
+                                                <h5 class="description-header">Tratamientos</h5>
+                                                <div class="tratamientos-tags">
+                                                    <?= mostrarTratamientosComoEtiquetas($doctor['tratamientos_doctor']) ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="description-block">
+                                                <h5 class="description-header">Horarios de Atención</h5>
+                                                <ul class="list-group list-group-unbordered text-center" style="margin-top: 10px;">
+                                                    <?= formatearHorariosDoctor($doctor['horarios_doctor']) ?>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </section>
 
-<!-- Modal -->
-<?php if (in_array($_SESSION["rol"], ["Secretaria", "Administrador"])): ?>
-<div class="modal fade" id="modal-nuevo-consultorio">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="<?= BASE_URL ?>consultorios/crear">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Nuevo Consultorio</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Nombre del Consultorio</label>
-                        <input type="text" name="nombre" class="form-control" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Guardar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
 <style>
-.estado-Abierto { background-color: #00a65a; }
-.estado-Cerrado { background-color: #dd4b39; }
-.estado-Ocupado { background-color: #f39c12; }
-.estado-Mantenimiento { background-color: #605ca8; }
-.estado-manual::after { content: "*"; color: white; }
+.tratamientos-tags { padding: 5px 10px 15px 10px; text-align: center; line-height: 2; }
+.tratamientos-tags .label { margin: 2px; font-size: 13px; font-weight: 500; }
+.box-footer .border-bottom { border-bottom: 1px solid #f4f4f4; }
 </style>
 
+<?php ob_start(); ?>
 <script>
 $(function() {
-    $('.table').DataTable({
-        language: {
-            url: '<?= BASE_URL ?>Vistas/plugins/datatables/Spanish.json'
-        }
-    });
+    // Inicializa tooltips (motivo del estado manual)
+    $('[data-toggle="tooltip"]').tooltip();
 
-    $('.btn-cambiar-estado').click(function() {
-        const id = $(this).data('id');
-        const nombre = $(this).data('nombre');
-
-        if (confirm(`¿Cambiar estado del consultorio ${nombre}?`)) {
-            $.post('<?= BASE_URL ?>api/consultorios/cambiar-estado', { id: id }, function() {
-                location.reload();
-            });
-        }
-    });
+    // Filtro simple para doctor cards (mismo comportamiento que tenías)
+    function aplicarFiltros() {
+        var nombreFiltro = $('#filtro-nombre').val().toLowerCase().trim();
+        var tratamientoFiltro = $('#filtro-tratamiento').val().toLowerCase().trim();
+        
+        $('.doctor-card').each(function() {
+            var card = $(this);
+            var nombreDoctor = card.data('nombre');
+            var tratamientosDoctor = card.data('tratamientos');
+            
+            var nombreMatch = nombreDoctor.includes(nombreFiltro);
+            var tratamientoMatch = tratamientosDoctor.includes(tratamientoFiltro);
+            
+            if (nombreMatch && tratamientoMatch) {
+                card.show(300);
+            } else {
+                card.hide(300);
+            }
+        });
+    }
+    $('#filtro-nombre, #filtro-tratamiento').on('keyup', aplicarFiltros);
 });
 </script>
+<?php $scriptDinamico = ob_get_clean(); ?>

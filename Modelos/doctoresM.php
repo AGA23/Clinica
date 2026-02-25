@@ -1,237 +1,252 @@
 <?php
+// En Modelos/DoctoresM.php (VERSIÓN FINAL, COMPLETA Y SIN REDUNDANCIAS)
+
 require_once "ConexionBD.php";
 
-class DoctoresM extends ConexionBD {
-   // ✅ Lista básica de doctores con sus tratamientos (reemplaza especialidad)
-   public static function VerDoctoresBasicosM() {
-    try {
-        $pdo = ConexionBD::getInstancia();
-        $sql = "SELECT d.id, CONCAT(d.nombre, ' ', d.apellido) AS nombre,
-                       GROUP_CONCAT(t.nombre SEPARATOR ', ') AS tratamientos
-                FROM doctores d
-                LEFT JOIN doctor_tratamiento dt ON d.id = dt.id_doctor
-                LEFT JOIN tratamientos t ON dt.id_tratamiento = t.id
-                WHERE d.estado = 'activo'
-                GROUP BY d.id
-                ORDER BY d.apellido, d.nombre";
-        $stmt = $pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Error en VerDoctoresBasicosM: " . $e->getMessage());
-        return [];
-    }
-}
+class DoctoresM {
 
-// ✅ Información básica de un solo doctor, con sus tratamientos
-public static function DoctorBasicoM($columna, $valor) {
-    try {
-        $pdo = ConexionBD::getInstancia();
-        $sql = "SELECT d.id, CONCAT(d.nombre, ' ', d.apellido) AS nombre,
-                       GROUP_CONCAT(t.nombre SEPARATOR ', ') AS tratamientos
-                FROM doctores d
-                LEFT JOIN doctor_tratamiento dt ON d.id = dt.id_doctor
-                LEFT JOIN tratamientos t ON dt.id_tratamiento = t.id
-                WHERE d.$columna = :valor AND d.estado = 'activo'
-                GROUP BY d.id
-                LIMIT 1";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(":valor", $valor);
+    public static function ListarDoctoresM() {
+        $sql = "SELECT d.*, co.nombre as nombre_consultorio FROM doctores d LEFT JOIN consultorios co ON d.id_consultorio = co.id";
+        $params = [];
+        if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'Secretario' && isset($_SESSION['id_consultorio'])) {
+            $sql .= " WHERE d.id_consultorio = :id_consultorio";
+            $params[':id_consultorio'] = $_SESSION['id_consultorio'];
+        }
+        $sql .= " ORDER BY d.apellido, d.nombre";
+        $stmt = ConexionBD::getInstancia()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function ObtenerDoctorM($id) {
+        $stmt = ConexionBD::getInstancia()->prepare("SELECT * FROM doctores WHERE id = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("Error en DoctorBasicoM: " . $e->getMessage());
-        return false;
     }
-}
 
-    /* Métodos existentes para gestión completa de doctores */
-    static public function CrearDoctorM($tablaBD, $datosC) {
-        $pdo = ConexionBD::getInstancia()->prepare("INSERT INTO $tablaBD(apellido, nombre, sexo, usuario, clave, rol, foto) 
-        VALUES(:apellido, :nombre, :sexo, :usuario, :clave, :rol, :foto)");
+    public static function CrearDoctorM($datos) {
+    try {
+        // === INICIO DE LA MODIFICACIÓN (Consulta SQL) ===
+        $sql = "INSERT INTO doctores (nombre, apellido, email, sexo, usuario, clave, id_consultorio, rol, matricula_nacional, matricula_provincial) 
+                VALUES (:nombre, :apellido, :email, :sexo, :usuario, :clave, :id_consultorio, :rol, :matricula_nacional, :matricula_provincial)";
+        // === FIN DE LA MODIFICACIÓN ===
+        
+        $stmt = ConexionBD::getInstancia()->prepare($sql);
 
-        $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
-        $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
-        $pdo->bindParam(":sexo", $datosC["sexo"], PDO::PARAM_STR);
-        $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-        $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
-        $pdo->bindParam(":rol", $datosC["rol"], PDO::PARAM_STR);
-        $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
+        $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+        $stmt->bindParam(":apellido", $datos["apellido"], PDO::PARAM_STR);
+        $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+        $stmt->bindParam(":sexo", $datos["sexo"], PDO::PARAM_STR);
+        $stmt->bindParam(":usuario", $datos["usuario"], PDO::PARAM_STR);
+        $stmt->bindParam(":clave", $datos["clave"], PDO::PARAM_STR);
+        $stmt->bindParam(":id_consultorio", $datos["id_consultorio"], PDO::PARAM_INT);
+        $stmt->bindParam(":rol", $datos["rol"], PDO::PARAM_STR);
 
-        if ($pdo->execute()) {
-            return ConexionBD::getInstancia()->lastInsertId();
+        // === INICIO DE LA MODIFICACIÓN (bindParam) ===
+        $stmt->bindParam(":matricula_nacional", $datos["matricula_nacional"], PDO::PARAM_STR);
+        $stmt->bindParam(":matricula_provincial", $datos["matricula_provincial"], PDO::PARAM_STR);
+        // === FIN DE LA MODIFICACIÓN ===
+        
+        return $stmt->execute();
+        
+    } catch (PDOException $e) {
+        // El error 1062 es para 'Duplicate entry'. Indica que un campo unique ya existe.
+        if ($e->errorInfo[1] == 1062) {
+            error_log("Intento de crear doctor con datos duplicados: " . $e->getMessage());
+        } else {
+            error_log("Error en CrearDoctorM: " . $e->getMessage());
         }
         return false;
     }
+}
 
-    static public function AsignarHorariosDoctorM($idDoctor, $horarios) {
-        $pdo = ConexionBD::getInstancia();
-        
+   public static function ActualizarDoctorM($datos) {
+    // === INICIO DE LA MODIFICACIÓN (Consulta SQL) ===
+    $sql = "UPDATE doctores SET 
+                nombre = :nombre, 
+                apellido = :apellido, 
+                email = :email, 
+                sexo = :sexo, 
+                usuario = :usuario, 
+                id_consultorio = :id_consultorio,
+                matricula_nacional = :matricula_nacional,
+                matricula_provincial = :matricula_provincial
+                firma_digital = :firma_digital 
+            ";
+    // === FIN DE LA MODIFICACIÓN ===
+            
+    $params = [
+        "id" => $datos["id"], 
+        "nombre" => $datos["nombre"], 
+        "apellido" => $datos["apellido"], 
+        "email" => $datos["email"], 
+        "sexo" => $datos["sexo"], 
+        "usuario" => $datos["usuario"], 
+        "id_consultorio" => $datos["id_consultorio"],
+
+        // === INICIO DE LA MODIFICACIÓN (Parámetros) ===
+        "matricula_nacional" => $datos["matricula_nacional"],
+        "matricula_provincial" => $datos["matricula_provincial"]
+        // === FIN DE LA MODIFICACIÓN ===
+    ];
+
+    if ($datos["clave"] !== null) {
+        $sql .= ", clave = :clave";
+        $params['clave'] = $datos['clave'];
+    }
+    $sql .= " WHERE id = :id";
+    $stmt = ConexionBD::getInstancia()->prepare($sql);
+    return $stmt->execute($params);
+}
+    
+    public static function BorrarDoctorM($id) {
+        $stmt = ConexionBD::getInstancia()->prepare("DELETE FROM doctores WHERE id = :id");
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        try { return $stmt->execute(); }
+        catch (PDOException $e) { return false; }
+    }
+
+    public static function ObtenerHorariosDoctorM($idDoctor) {
+        $stmt = ConexionBD::getInstancia()->prepare("SELECT * FROM horarios_doctores WHERE id_doctor = :id_doctor ORDER BY dia_semana, hora_inicio");
+        $stmt->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function GuardarHorariosDoctorM($idDoctor, $horarios) {
+        $conexion = ConexionBD::getInstancia();
         try {
-            $pdo->beginTransaction();
+            $conexion->beginTransaction();
+            $stmt_delete = $conexion->prepare("DELETE FROM horarios_doctores WHERE id_doctor = :id");
+            $stmt_delete->execute([':id' => $idDoctor]);
+            $stmt_insert = $conexion->prepare("INSERT INTO horarios_doctores (id_doctor, dia_semana, hora_inicio, hora_fin) VALUES (:id, :dia, :inicio, :fin)");
+            foreach ($horarios as $h) {
+                if (!empty($h['hora_inicio']) && !empty($h['hora_fin'])) {
+                    $stmt_insert->execute([':id' => $idDoctor, ':dia' => $h['dia_semana'], ':inicio' => $h['hora_inicio'], ':fin' => $h['hora_fin']]);
+                }
+            }
+            $conexion->commit();
+            return true;
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en transacción de horarios de doctor: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public static function ListarDoctoresPorConsultorioM($id_consultorio) {
+        $sql = "SELECT id, nombre, apellido FROM doctores WHERE id_consultorio = :id_consultorio ORDER BY apellido ASC, nombre ASC";
+        $stmt = ConexionBD::getInstancia()->prepare($sql);
+        $stmt->bindParam(":id_consultorio", $id_consultorio, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+  
+public static function ObtenerPerfilDoctorM($id_doctor) {
+    // [MODIFICADO] Añadimos 'd.firma_digital' a la lista de columnas seleccionadas.
+    $sql = "SELECT d.id, d.apellido, d.nombre, d.foto, d.usuario, d.clave, d.email, 
+                   d.matricula_nacional, d.matricula_provincial,
+                   d.firma_digital, 
+                   co.nombre AS nombre_consultorio 
+            FROM doctores d 
+            LEFT JOIN consultorios co ON d.id_consultorio = co.id 
+            WHERE d.id = :id_doctor LIMIT 1";
             
-            $stmtDelete = $pdo->prepare("DELETE FROM horarios_doctores WHERE id_doctor = :id_doctor");
-            $stmtDelete->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-            $stmtDelete->execute();
+    $pdo = ConexionBD::getInstancia()->prepare($sql);
+    $pdo->bindParam(":id_doctor", $id_doctor, PDO::PARAM_INT);
+    $pdo->execute();
+    return $pdo->fetch(PDO::FETCH_ASSOC);
+}
+public static function ActualizarPerfilM($datos) {
+    
+    $sql = "UPDATE doctores SET 
+                nombre = :nombre, 
+                apellido = :apellido, 
+                email = :email, 
+                clave = :clave, 
+                foto = :foto,
+                firma_digital = :firma_digital 
+            WHERE id = :id";
             
-            $stmtInsert = $pdo->prepare("INSERT INTO horarios_doctores 
-                                        (id_doctor, id_consultorio, dia_semana, hora_inicio, hora_fin) 
-                                        VALUES (:id_doctor, :id_consultorio, :dia_semana, :hora_inicio, :hora_fin)");
+    $pdo = ConexionBD::getInstancia()->prepare($sql);
+    
+    $pdo->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+    $pdo->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+    $pdo->bindParam(":apellido", $datos["apellido"], PDO::PARAM_STR);
+    $pdo->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+    $pdo->bindParam(":clave", $datos["clave"], PDO::PARAM_STR);
+    $pdo->bindParam(":foto", $datos["foto"], PDO::PARAM_STR);
+    $pdo->bindParam(":firma_digital", $datos["firma_digital"], PDO::PARAM_STR);
+    
+    return $pdo->execute();
+}
+
+    // --- MÉTODOS PARA LA RELACIÓN DOCTOR-TRATAMIENTO ---
+
+    public static function ObtenerTratamientosPorDoctorM($id_doctor) {
+        $sql = "SELECT t.id, t.nombre FROM tratamientos t INNER JOIN doctor_tratamiento dt ON t.id = dt.id_tratamiento WHERE dt.id_doctor = :id_doctor ORDER BY t.nombre ASC";
+        $stmt = ConexionBD::getInstancia()->prepare($sql);
+        $stmt->bindParam(":id_doctor", $id_doctor, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function ObtenerTratamientosAsignadosM($id_doctor) {
+        $stmt = ConexionBD::getInstancia()->prepare("SELECT id_tratamiento FROM doctor_tratamiento WHERE id_doctor = :id");
+        $stmt->bindParam(":id", $id_doctor, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+    }
+    
+public static function ObtenerConsultorioDeDoctor($id_doctor) {
+        $stmt = ConexionBD::getInstancia()->prepare("SELECT id_consultorio FROM doctores WHERE id = :id_doctor");
+        $stmt->bindParam(":id_doctor", $id_doctor, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        // fetchColumn() es perfecto para esto: devuelve el valor de la primera columna de la fila encontrada,
+        // o false si no encuentra ninguna fila, que es un resultado claro y fácil de manejar.
+        return $stmt->fetchColumn();
+    }
+
+
+    /**
+     * ¡ESTA ES LA ÚNICA FUNCIÓN QUE FALTABA!
+     * Guarda (borra e inserta) las asignaciones de tratamientos para un doctor.
+     */
+    public static function GuardarTratamientosAsignadosM($id_doctor, $ids_tratamientos) {
+        $conexion = ConexionBD::getInstancia();
+        try {
+            $conexion->beginTransaction();
+            // 1. Borrar todas las asignaciones antiguas
+            $stmt_delete = $conexion->prepare("DELETE FROM doctor_tratamiento WHERE id_doctor = :id");
+            $stmt_delete->execute([':id' => $id_doctor]);
             
-            foreach ($horarios as $horario) {
-                $stmtInsert->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-                $stmtInsert->bindParam(":id_consultorio", $horario['id_consultorio'], PDO::PARAM_INT);
-                $stmtInsert->bindParam(":dia_semana", $horario['dia_semana'], PDO::PARAM_INT);
-                $stmtInsert->bindParam(":hora_inicio", $horario['hora_inicio'], PDO::PARAM_STR);
-                $stmtInsert->bindParam(":hora_fin", $horario['hora_fin'], PDO::PARAM_STR);
-                $stmtInsert->execute();
+            // 2. Insertar las nuevas asignaciones (si las hay)
+            if (!empty($ids_tratamientos)) {
+                $stmt_insert = $conexion->prepare("INSERT INTO doctor_tratamiento (id_doctor, id_tratamiento) VALUES (:id_doctor, :id_tratamiento)");
+                foreach ($ids_tratamientos as $id_trat) {
+                    $stmt_insert->execute([':id_doctor' => $id_doctor, ':id_tratamiento' => $id_trat]);
+                }
             }
             
-            $pdo->commit();
+            $conexion->commit();
             return true;
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            error_log("Error en AsignarHorariosDoctorM: " . $e->getMessage());
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en transacción de tratamientos de doctor: " . $e->getMessage());
             return false;
         }
     }
 
-    static public function ObtenerHorariosDoctorM($idDoctor) {
-        $pdo = ConexionBD::getInstancia()->prepare("SELECT hd.*, c.nombre as consultorio 
-                                                   FROM horarios_doctores hd
-                                                   JOIN consultorios c ON hd.id_consultorio = c.id
-                                                   WHERE hd.id_doctor = :id_doctor
-                                                   ORDER BY hd.dia_semana, hd.hora_inicio");
-        $pdo->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-        $pdo->execute();
-        return $pdo->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    static public function EliminarHorariosDoctorM($idDoctor) {
-        $pdo = ConexionBD::getInstancia()->prepare("DELETE FROM horarios_doctores WHERE id_doctor = :id_doctor");
-        $pdo->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-        return $pdo->execute();
-    }
-
-    static public function VerDoctoresM($tablaBD, $columna = null, $valor = null) {
-        $valid_columns = ['id', 'apellido', 'nombre', 'sexo', 'usuario', 'rol'];
-    
-        $sql = "SELECT d.*, 
-                (SELECT GROUP_CONCAT(CONCAT(h.dia_semana, ':', h.hora_inicio, '-', h.hora_fin) SEPARATOR '|') 
-                 FROM horarios_doctores h WHERE h.id_doctor = d.id) as horarios,
-                (SELECT GROUP_CONCAT(t.nombre SEPARATOR ', ') 
-                 FROM doctor_tratamiento dt 
-                 INNER JOIN tratamientos t ON dt.id_tratamiento = t.id 
-                 WHERE dt.id_doctor = d.id) as tratamientos
-                FROM $tablaBD d";
-    
-        if ($columna != null && in_array($columna, $valid_columns)) {
-            $sql .= " WHERE d.$columna = :$columna";
-            $pdo = ConexionBD::getInstancia()->prepare($sql);
-            $pdo->bindParam(":$columna", $valor, PDO::PARAM_STR);
-        } else {
-            $pdo = ConexionBD::getInstancia()->prepare($sql);
+     
+    public static function ObtenerNombrePorIdM($id_doctor) {
+        if (empty($id_doctor) || !is_numeric($id_doctor)) {
+            return 'Doctor no especificado';
         }
-    
-        $pdo->execute();
-        return $pdo->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-
-    static public function DoctorM($tablaBD, $columna, $valor) {
-        $pdo = ConexionBD::getInstancia()->prepare("SELECT d.*, 
-                                                  (SELECT GROUP_CONCAT(CONCAT(h.dia_semana, ':', h.hora_inicio, '-', h.hora_fin, ':', h.id_consultorio) SEPARATOR '|') 
-                                                   FROM horarios_doctores h WHERE h.id_doctor = d.id) as horarios
-                                                  FROM $tablaBD d 
-                                                  WHERE d.$columna = :$columna");
-        $pdo->bindParam(":$columna", $valor, PDO::PARAM_STR);
-        $pdo->execute();
-        return $pdo->fetch(PDO::FETCH_ASSOC);
-    }
-
-    static public function ActualizarDoctorM($tablaBD, $datosC) {
-        $sql = "UPDATE $tablaBD SET 
-                apellido = :apellido, 
-                nombre = :nombre, 
-                sexo = :sexo, 
-                usuario = :usuario";
-        
-        if (!empty($datosC["clave"])) {
-            $sql .= ", clave = :clave";
-        }
-        
-        if (!empty($datosC["foto"])) {
-            $sql .= ", foto = :foto";
-        }
-        
-        $sql .= " WHERE id = :id";
-
-        $pdo = ConexionBD::getInstancia()->prepare($sql);
-        
-        $pdo->bindParam(":id", $datosC["id"], PDO::PARAM_INT);
-        $pdo->bindParam(":apellido", $datosC["apellido"], PDO::PARAM_STR);
-        $pdo->bindParam(":nombre", $datosC["nombre"], PDO::PARAM_STR);
-        $pdo->bindParam(":sexo", $datosC["sexo"], PDO::PARAM_STR);
-        $pdo->bindParam(":usuario", $datosC["usuario"], PDO::PARAM_STR);
-
-        if (!empty($datosC["clave"])) {
-            $pdo->bindParam(":clave", $datosC["clave"], PDO::PARAM_STR);
-        }
-        
-        if (!empty($datosC["foto"])) {
-            $pdo->bindParam(":foto", $datosC["foto"], PDO::PARAM_STR);
-        }
-
-        return $pdo->execute();
-    }
-
-    static public function BorrarDoctorM($tablaBD, $id) {
-        $pdo = ConexionBD::getInstancia()->prepare("DELETE FROM $tablaBD WHERE id = :id");
-        $pdo->bindParam(":id", $id, PDO::PARAM_INT);
-        return $pdo->execute();
-    }
-
-    // Asignar tratamientos (borra los anteriores)
-public static function AsignarTratamientosDoctorM($idDoctor, $tratamientos) {
-    try {
-        $pdo = ConexionBD::getInstancia();
-        $pdo->beginTransaction();
-
-        // Eliminar tratamientos previos
-        $stmtDel = $pdo->prepare("DELETE FROM doctor_tratamiento WHERE id_doctor = :id_doctor");
-        $stmtDel->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-        $stmtDel->execute();
-
-        // Insertar nuevos
-        $stmtIns = $pdo->prepare("INSERT INTO doctor_tratamiento (id_doctor, id_tratamiento) VALUES (:id_doctor, :id_tratamiento)");
-        foreach ($tratamientos as $idTratamiento) {
-            $stmtIns->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-            $stmtIns->bindParam(":id_tratamiento", $idTratamiento, PDO::PARAM_INT);
-            $stmtIns->execute();
-        }
-
-        $pdo->commit();
-        return true;
-    } catch (PDOException $e) {
-        $pdo->rollBack();
-        error_log("Error en AsignarTratamientosDoctorM: " . $e->getMessage());
-        return false;
-    }
-}
-
-// Eliminar tratamientos del doctor
-public static function EliminarTratamientosDoctorM($idDoctor) {
-    $pdo = ConexionBD::getInstancia()->prepare("DELETE FROM doctor_tratamiento WHERE id_doctor = :id_doctor");
-    $pdo->bindParam(":id_doctor", $idDoctor, PDO::PARAM_INT);
-    return $pdo->execute();
-}
-
-
-public static function ObtenerConsultorioDeDoctor($id_doctor) {
-        $pdo = ConexionBD::getInstancia();
-        $stmt = $pdo->prepare("SELECT id_consultorio FROM doctores WHERE id = :id_doctor");
-        $stmt->bindParam(":id_doctor", $id_doctor, PDO::PARAM_INT);
+        $stmt = ConexionBD::getInstancia()->prepare("SELECT CONCAT(nombre, ' ', apellido) as nombre_completo FROM doctores WHERE id = :id");
+        $stmt->bindParam(":id", $id_doctor, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchColumn(); // Retorna solo el valor id_consultorio o false si no hay resultado
+        return $stmt->fetchColumn() ?: 'Doctor Desconocido'; // Devuelve el nombre o un texto por defecto
     }
-
 }

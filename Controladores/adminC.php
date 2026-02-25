@@ -1,185 +1,156 @@
 <?php
+// En Controladores/AdminC.php
 
 class AdminC {
 
-    // Ingreso Admin
+    // --- LÓGICA DE LOGIN ---
     public function IngresarAdminC() {
-
         if (isset($_POST["usuario-Ing"])) {
-
-            if (isset($_POST["usuario-Ing"]) && isset($_POST["clave-Ing"]) && 
-                preg_match('/^[a-zA-Z0-9]+$/', $_POST["usuario-Ing"]) && 
-                preg_match('/^[a-zA-Z0-9]+$/', $_POST["clave-Ing"])) {
-
+            if (isset($_POST["usuario-Ing"]) && isset($_POST["clave-Ing"])) {
                 $tablaBD = "administradores";
-                $datosC = array("usuario" => $_POST["usuario-Ing"], "clave" => $_POST["clave-Ing"]);
-
-                // Obtener el administrador de la base de datos
+                $datosC = ["usuario" => $_POST["usuario-Ing"]];
+                
                 $resultado = AdminM::IngresarAdminM($tablaBD, $datosC);
 
-                // Comprobar si el resultado no es falso
-                if ($resultado != false) {
-                    // Comparar las contraseñas en texto plano
-                    if ($_POST["clave-Ing"] == $resultado["clave"]) {
-                        $_SESSION["Ingresar"] = true;
-                        $_SESSION["id"] = $resultado["id"];
-                        $_SESSION["usuario"] = $resultado["usuario"];
-                        $_SESSION["clave"] = $resultado["clave"];
-                        $_SESSION["nombre"] = $resultado["nombre"];
-                        $_SESSION["apellido"] = $resultado["apellido"];
-                        $_SESSION["foto"] = $resultado["foto"];
-                        $_SESSION["rol"] = $resultado["rol"];
-
-                        echo '<script>
-                            window.location = "inicio";
-                        </script>';
-                    } else {
-                        // Contraseña incorrecta
-                        echo '<br><div class="alert alert-danger">Contraseña incorrecta.</div>';
-                    }
+                // IMPORTANTE: Esta versión es insegura. Debes migrar a contraseñas hasheadas.
+                if ($resultado && $_POST["clave-Ing"] == $resultado["clave"]) {
+                    $_SESSION["Ingresar"] = true;
+                    $_SESSION["id"] = $resultado["id"];
+                    $_SESSION["usuario"] = $resultado["usuario"];
+                    $_SESSION["nombre"] = $resultado["nombre"];
+                    $_SESSION["apellido"] = $resultado["apellido"];
+                    $_SESSION["foto"] = $resultado["foto"];
+                    $_SESSION["rol"] = $resultado["rol"];
+                    echo '<script>window.location = "inicio";</script>';
                 } else {
-                    // Usuario no encontrado
-                    echo '<br><div class="alert alert-danger">Usuario no encontrado.</div>';
+                    echo '<br><div class="alert alert-danger">Usuario o contraseña incorrectos.</div>';
                 }
-            } else {
-                echo '<br><div class="alert alert-warning">Los campos son obligatorios y deben contener solo letras y números.</div>';
             }
         }
     }
 
-    // Registrar un nuevo admin
-    public function RegistrarAdminC() {
-        if (isset($_POST["usuarioP"])) {
-            $tablaBD = "administradores";
+public function ObtenerPerfilAdminC() {
+    if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'Administrador' && isset($_SESSION['id'])) {
 
-            $datosC = array(
-                "usuario" => $_POST["usuarioP"],
-                "clave" => $_POST["claveP"], // Almacenar la contraseña tal cual
-                "nombre" => $_POST["nombreP"],
-                "apellido" => $_POST["apellidoP"],
-                "foto" => $_POST["fotoP"]
-            );
+        return AdminM::VerPerfilAdminM("administradores", $_SESSION['id']);
+    }
+    return false;
+}
 
-            $resultado = AdminM::RegistrarAdminM($tablaBD, $datosC);
+   
+    public function ActualizarPerfilAdminC() {
+        if (isset($_POST["actualizarPerfilAdmin"]) && $_POST['idAdmin'] == $_SESSION['id']) {
+
+            // Lógica para la contraseña: Mantiene la contraseña en texto plano como tu sistema actual.
+            $clave = $_POST["claveE"];
+            if (empty(trim($_POST["claveE"]))) {
+                 $clave = $_POST["claveActual"]; // Mantiene la vieja si el campo está vacío.
+            }
+
+            // Lógica para la foto de perfil
+            $rutaFoto = $_POST["fotoActual"];
+            if (isset($_FILES["fotoE"]["tmp_name"]) && !empty($_FILES["fotoE"]["tmp_name"])) {
+                if (!empty($_POST["fotoActual"]) && $_POST["fotoActual"] != 'Vistas/img/user-default.png') {
+                    if(file_exists($_POST["fotoActual"])) unlink($_POST["fotoActual"]);
+                }
+                // Simplificamos la ruta de la imagen
+                $nombreArchivo = "admin_" . $_POST['idAdmin'] . ".jpg";
+                $rutaFoto = "Vistas/img/admins/" . $nombreArchivo;
+                move_uploaded_file($_FILES["fotoE"]["tmp_name"], $rutaFoto);
+            }
+
+            // Prepara el array de datos para el modelo
+            $datos = [
+                "id" => $_POST["idAdmin"],
+                "nombre" => trim($_POST["nombreE"]),
+                "apellido" => trim($_POST["apellidoE"]),
+                "usuario" => trim($_POST["usuarioE"]),
+                "clave" => $clave,
+                "foto" => $rutaFoto
+            ];
+
+            // Llama a tu método existente del modelo para actualizar
+            $resultado = AdminM::ActualizarPerfilAdminM("administradores", $datos);
 
             if ($resultado) {
-                echo '<script>window.location = "inicio";</script>';
+                // Actualizar la sesión con los nuevos datos
+                $_SESSION['nombre'] = $datos['nombre'];
+                $_SESSION['apellido'] = $datos['apellido'];
+                $_SESSION['usuario'] = $datos['usuario'];
+                $_SESSION['foto'] = $datos['foto'];
+                
+                $_SESSION['mensaje_perfil'] = "¡Perfil actualizado correctamente!";
+                $_SESSION['tipo_mensaje_perfil'] = "success";
+            } else {
+                $_SESSION['mensaje_perfil'] = "Error al actualizar el perfil.";
+                $_SESSION['tipo_mensaje_perfil'] = "danger";
             }
+
+            // Redirige a la página de perfil
+            echo '<script>window.location = "perfil-Administrador";</script>';
+            exit();
         }
     }
 
-    // Ver Perfil Admin
-    public function VerPerfilAdminC() {
-        $tablaBD = "administradores";
-        $id = $_SESSION["id"];
-        $resultado = AdminM::VerPerfilAdminM($tablaBD, $id);
+    public static function ListarAdminsC() {
+        // Llama al nuevo método del modelo que excluye al usuario actual.
+        return AdminM::ListarAdminsM();
+    }
+    
+    /**
+     * Procesa el formulario para crear un nuevo administrador.
+     */
+    public function CrearAdminC() {
+        if (isset($_POST["crear_admin"])) {
+            // Seguridad: Doble verificación de que solo un admin puede crear otro.
+            if ($_SESSION['rol'] !== 'Administrador') { return; }
 
-        echo '<tr>
-                <td>' . $resultado["usuario"] . '</td>
-                <td>' . $resultado["clave"] . '</td>
-                <td>' . $resultado["nombre"] . '</td>
-                <td>' . $resultado["apellido"] . '</td>';
+            $datos = [
+                "nombre"   => trim($_POST['nombre']),
+                "apellido" => trim($_POST['apellido']),
+                "usuario"  => trim($_POST['usuario']),
+                "clave"    => password_hash(trim($_POST['clave']), PASSWORD_DEFAULT) // Siempre hashear contraseñas nuevas
+            ];
 
-        if ($resultado["foto"] !== "") {
-            echo '<td><img src="' . $resultado["foto"] . '" class="img-responsive" width="40px"></td>';
-        } else {
-            echo '<td><img src="http://localhost/clinica/Vistas/img/defecto.png" class="img-responsive" width="40px"></td>';
+            $respuesta = AdminM::CrearAdminM($datos); // Llama al nuevo método del modelo
+            if ($respuesta) {
+                $_SESSION['mensaje_admins'] = "¡Administrador creado con éxito!";
+                $_SESSION['tipo_mensaje_admins'] = "success";
+            } else {
+                $_SESSION['mensaje_admins'] = "Error al crear el administrador. El usuario puede ya existir.";
+                $_SESSION['tipo_mensaje_admins'] = "danger";
+            }
+            echo '<script>window.location = "admins";</script>';
+            exit();
         }
-
-        echo '<td>
-                <a href="http://localhost/clinica/perfil-A/' . $resultado["id"] . '">
-                    <button class="btn btn-success"><i class="fa fa-pencil"></i></button>
-                </a>
-            </td>
-        </tr>';
     }
 
-    // Editar Perfil
-    public function EditarPerfilAdminC() {
-        $tablaBD = "administradores";
-        $id = $_SESSION["id"];
-        $resultado = AdminM::VerPerfilAdminM($tablaBD, $id);
+    /**
+     * Procesa el formulario para actualizar los datos de otro administrador.
+     */
+    public function ActualizarAdminC() {
+        if (isset($_POST["editar_admin"])) {
+            if ($_SESSION['rol'] !== 'Administrador') { return; }
 
-        echo '<form method="post" enctype="multipart/form-data">
-                <div class="row">
-                    <div class="col-md-6 col-xs-12">
-                        <h2>Nombre:</h2>
-                        <input type="text" class="input-lg" name="nombreP" value="' . $resultado["nombre"] . '">
-                        <input type="hidden" class="input-lg" name="Aid" value="' . $resultado["id"] . '">
-                        <h2>Apellido:</h2>
-                        <input type="text" class="input-lg" name="apellidoP" value="' . $resultado["apellido"] . '">
-                        <h2>Usuario:</h2>
-                        <input type="text" class="input-lg" name="usuarioP" value="' . $resultado["usuario"] . '">
-                        <h2>Contraseña:</h2>
-                        <input type="password" class="input-lg" name="claveP" value="' . $resultado["clave"] . '">
-                    </div>
-
-                    <div class="col-md-6 col-xs-12">
-                        <br><br>
-                        <input type="file" name="imgP">
-                        <br>';
-
-        if ($resultado["foto"] == "") {
-            echo '<img src="http://localhost/clinica/Vistas/img/defecto.png" width="200px;">';
-        } else {
-            echo '<img src="http://localhost/clinica/' . $resultado["foto"] . '" width="200px;">';
-        }
-
-        echo '<input type="hidden" name="imgActual" value="' . $resultado["foto"] . '">
-            <br><br>
-            <button type="submit" class="btn btn-success">Guardar Cambios</button>
-        </div>
-    </div>
-</form>';
-    }
-
-    // Actualizar Perfil
-    public function ActualizarPerfilAdminC() {
-        if (isset($_POST["Aid"])) {
-
-            $rutaImg = $_POST["imgActual"];
-
-            if (isset($_FILES["imgP"]["tmp_name"]) && !empty($_FILES["imgP"]["tmp_name"])) {
-
-                if (!empty($_POST["imgActual"])) {
-                    unlink($_POST["imgActual"]);
-                }
-
-                if ($_FILES["imgP"]["type"] == "image/jpeg" || $_FILES["imgP"]["type"] == "image/png") {
-                    $nombre = mt_rand(10, 999);
-                    $extension = ($_FILES["imgP"]["type"] == "image/jpeg") ? ".jpg" : ".png";
-                    $rutaImg = "Vistas/img/Usuarios/A-" . $nombre . $extension;
-
-                    if ($_FILES["imgP"]["type"] == "image/jpeg") {
-                        $foto = imagecreatefromjpeg($_FILES["imgP"]["tmp_name"]);
-                        imagejpeg($foto, $rutaImg);
-                    }
-
-                    if ($_FILES["imgP"]["type"] == "image/png") {
-                        $foto = imagecreatefrompng($_FILES["imgP"]["tmp_name"]);
-                        imagepng($foto, $rutaImg);
-                    }
-                }
+            $datos = [
+                "id"       => $_POST['id_admin_editar'],
+                "nombre"   => trim($_POST['nombre_editar']),
+                "apellido" => trim($_POST['apellido_editar']),
+                "usuario"  => trim($_POST['usuario_editar']),
+                // Hashea la contraseña solo si se proporcionó una nueva
+                "clave"    => !empty(trim($_POST['clave_editar'])) ? password_hash(trim($_POST['clave_editar']), PASSWORD_DEFAULT) : null
+            ];
+            
+            $respuesta = AdminM::ActualizarAdminM($datos); // Llama al nuevo método del modelo
+            if ($respuesta) {
+                $_SESSION['mensaje_admins'] = "¡Administrador actualizado!";
+                $_SESSION['tipo_mensaje_admins'] = "success";
+            } else {
+                $_SESSION['mensaje_admins'] = "Error al actualizar. El usuario puede ya existir.";
+                $_SESSION['tipo_mensaje_admins'] = "danger";
             }
-
-            $tablaBD = "administradores";
-            $datosC = array(
-                "id" => $_POST["Aid"], 
-                "usuario" => $_POST["usuarioP"], 
-                "clave" => $_POST["claveP"], // Almacenar la contraseña tal cual
-                "nombre" => $_POST["nombreP"], 
-                "apellido" => $_POST["apellidoP"], 
-                "foto" => $rutaImg
-            );
-
-            $resultado = AdminM::ActualizarPerfilAdminM($tablaBD, $datosC);
-
-            if ($resultado == true) {
-                echo '<script>
-                    window.location = "http://localhost/clinica/perfil-A/' . $resultado["id"] . '";
-                </script>';
-            }
+            echo '<script>window.location = "admins";</script>';
+            exit();
         }
     }
 }
-?>

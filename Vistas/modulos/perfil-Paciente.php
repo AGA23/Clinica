@@ -1,343 +1,133 @@
 <?php
-// Incluir configuración al inicio
-require_once $_SERVER['DOCUMENT_ROOT'] . '/clinica/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/clinica/Controladores/pacientesC.php';
 
-// Verificar sesión
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+
+// --- LÓGICA DE LA PÁGINA DE PERFIL ---
+
+// 1. PROCESAR LA ACTUALIZACIÓN SI SE ENVIÓ EL FORMULARIO
+// El controlador se encargará de validar, guardar y redirigir con un mensaje.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizarPerfilPaciente'])) {
+    // El autoloader encontrará la clase 'PacientesC' automáticamente.
+    $pacienteController = new PacientesC();
+    $pacienteController->ActualizarPerfilPacienteC();
 }
 
-// Verificar autenticación y rol
-if (!isset($_SESSION['Ingresar'])) {
-    header("Location: " . BASE_URL . "login");
-    exit();
+// 2. VERIFICAR ROL PARA ESTE MÓDULO ESPECÍFICO
+// La seguridad global ya fue verificada por loader.php, esta es una capa extra.
+if (!isset($_SESSION["rol"]) || $_SESSION["rol"] !== "Paciente") {
+    exit("Acceso no autorizado a este módulo.");
 }
 
-if ($_SESSION['rol'] != 'Paciente') {
-    header("Location: " . BASE_URL . "inicio");
-    exit();
-}
-
-// Manejo de mensajes de éxito/error
-$alertType = '';
-$alertMessage = '';
-
-// Capturar errores del GET
-if (isset($_GET['success'])) {
-    $alertType = 'success';
-    $alertMessage = 'Perfil actualizado correctamente';
-} elseif (isset($_GET['error'])) {
-    $alertType = 'danger';
-    switch ($_GET['error']) {
-        case 'actualizacion':
-            $alertMessage = 'Error al actualizar el perfil';
-            break;
-        case 'formato_imagen':
-            $alertMessage = 'Solo se permiten imágenes JPG, JPEG o PNG';
-            break;
-        case 'tamano_imagen':
-            $alertMessage = 'La imagen no debe exceder los 2MB';
-            break;
-        default:
-            $alertMessage = 'Ocurrió un error al procesar la solicitud';
-    }
-}
-
-// Obtener datos del paciente
+// 3. CARGAR LOS DATOS PARA MOSTRAR EN LA VISTA
+$paciente = null; // Se inicializa para evitar errores de variable no definida.
 try {
+    // El autoloader también se encarga de 'PacientesC' aquí.
     $pacienteC = new PacientesC();
-    $paciente = $pacienteC->VerPerfilPacienteC();
-} catch (Exception $e) {
-    $alertType = 'danger';
-    $alertMessage = 'Ocurrió un error al obtener los datos del perfil: ' . $e->getMessage();
-    $paciente = null;
-}
+    $paciente = $pacienteC->VerPerfilPacienteC(); // Intenta obtener los datos del paciente.
 
+    // Si el método no devuelve un paciente válido, se considera un error.
+    if (!$paciente) {
+        throw new Exception("El perfil del paciente no fue encontrado en la base de datos.");
+    }
+
+} catch (Exception $e) {
+    // Si ocurre cualquier error, se registra y se prepara un mensaje para el usuario.
+    error_log("Error al cargar perfil de paciente: " . $e->getMessage());
+    $_SESSION['mensaje_perfil'] = "No se pudieron cargar los datos del perfil. Por favor, intente de nuevo.";
+    $_SESSION['tipo_mensaje_perfil'] = "danger";
+    // $paciente se mantiene como null.
+}
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mi Perfil - Clínica</title>
-    <base href="<?= BASE_URL ?>">
+<!-- El código HTML del módulo empieza aquí. Es un fragmento que se insertará en la plantilla. -->
+<section class="content-header">
+    <h1>Mi Perfil</h1>
+</section>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="Vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="Vistas/dist/css/AdminLTE.min.css">
-    <link rel="stylesheet" href="Vistas/dist/css/skins/skin-blue.min.css">
-    <link rel="stylesheet" href="Vistas/bower_components/font-awesome/css/font-awesome.min.css">
-    <style>
-        .profile-img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #3c8dbc;
-        }
-        .info-box {
-            min-height: 100px;
-            margin-bottom: 20px;
-        }
-        .profile-buttons {
-            margin-top: 15px;
-        }
-    </style>
-</head>
+<section class="content">
+    
+    <!-- Muestra mensajes de éxito/error guardados en la sesión (ej: después de actualizar) -->
+    <?php
+    if (isset($_SESSION['mensaje_perfil'])) {
+        echo '<div class="alert alert-' . $_SESSION['tipo_mensaje_perfil'] . ' alert-dismissible"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' . $_SESSION['mensaje_perfil'] . '</div>';
+        // Se limpia el mensaje para que no se muestre de nuevo si se recarga la página.
+        unset($_SESSION['mensaje_perfil'], $_SESSION['tipo_mensaje_perfil']);
+    }
+    ?>
 
-<body class="hold-transition skin-blue sidebar-mini">
-    <div class="wrapper">
-        <!-- Cabecera -->
-        <?php include $_SERVER['DOCUMENT_ROOT'] . '/clinica/Vistas/modulos/cabecera.php'; ?>
-
-        <!-- Menú lateral -->
-        <?php include $_SERVER['DOCUMENT_ROOT'] . '/clinica/Vistas/modulos/menuPaciente.php'; ?>
-
-        <!-- Contenido principal -->
-        <div class="content-wrapper">
-            <section class="content-header">
-                <h1>Mi Perfil</h1>
-                <ol class="breadcrumb">
-                    <li><a href="<?= BASE_URL ?>inicio"><i class="fa fa-home"></i> Inicio</a></li>
-                    <li class="active">Perfil</li>
-                </ol>
-            </section>
-
-            <section class="content">
-                <?php if (!empty($alertMessage)): ?>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="alert alert-<?= $alertType ?> alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            <h4><i class="icon fa fa-<?= $alertType == 'success' ? 'check' : 'ban' ?>"></i> Alerta!</h4>
-                            <?= $alertMessage ?>
-                        </div>
-                    </div>
+    <!-- Si la carga de datos del paciente fue exitosa, se muestra el perfil -->
+    <?php if ($paciente): ?>
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Widget de Perfil -->
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+                    <img class="profile-user-img img-responsive img-circle" src="<?= !empty($paciente['foto']) ? BASE_URL . htmlspecialchars($paciente['foto']) : BASE_URL . 'Vistas/img/user-default.png' ?>" alt="Foto de perfil">
+                    <h3 class="profile-username text-center"><?= htmlspecialchars($paciente['nombre'] . ' ' . $paciente['apellido']) ?></h3>
+                    <p class="text-muted text-center">Paciente</p>
+                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalEditarPerfil"><b>Editar Perfil</b></button>
                 </div>
-                <?php endif; ?>
-
-                <?php if ($paciente): ?>
-                <div class="row">
-                    <div class="col-md-3">
-                        <!-- Foto de perfil -->
-                        <div class="box box-primary">
-                            <div class="box-body box-profile">
-                                <img class="profile-img" src="<?= !empty($paciente['foto']) ? $paciente['foto'] : 'Vistas/img/defecto.png' ?>" alt="Foto de perfil">
-                                <h3 class="profile-username text-center"><?= htmlspecialchars($paciente['nombre'] . ' ' . $paciente['apellido']) ?></h3>
-                                <p class="text-muted text-center">Paciente</p>
-                                
-                                <div class="profile-buttons">
-                                    <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#modalEditarPerfil">
-                                        <i class="fa fa-edit"></i> Editar Perfil
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-9">
-                        <!-- Información del paciente -->
-                        <div class="box box-primary">
-                            <div class="box-header with-border">
-                                <h3 class="box-title">Información Personal</h3>
-                            </div>
-                            <div class="box-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <span class="info-box-icon bg-blue"><i class="fa fa-user"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Nombre Completo</span>
-                                                <span class="info-box-number"><?= htmlspecialchars($paciente['nombre'] . ' ' . $paciente['apellido']) ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <span class="info-box-icon bg-blue"><i class="fa fa-at"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Usuario</span>
-                                                <span class="info-box-number"><?= htmlspecialchars($paciente['usuario']) ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <span class="info-box-icon bg-blue"><i class="fa fa-envelope"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Correo Electrónico</span>
-                                                <span class="info-box-number"><?= !empty($paciente['correo']) ? htmlspecialchars($paciente['correo']) : 'No registrado' ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="info-box">
-                                            <span class="info-box-icon bg-blue"><i class="fa fa-phone"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Teléfono</span>
-                                                <span class="info-box-number"><?= !empty($paciente['telefono']) ? htmlspecialchars($paciente['telefono']) : 'No registrado' ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="info-box">
-                                            <span class="info-box-icon bg-blue"><i class="fa fa-map-marker"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Dirección</span>
-                                                <span class="info-box-number"><?= !empty($paciente['direccion']) ? htmlspecialchars($paciente['direccion']) : 'No registrada' ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="alert alert-danger">
-                            <strong>Error:</strong> No se pudieron cargar los datos del perfil.
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </section>
+            </div>
         </div>
+        <div class="col-md-8">
+            <!-- Información Personal -->
+            <div class="box box-primary">
+                <div class="box-header with-border"><h3 class="box-title">Mi Información</h3></div>
+                <div class="box-body">
+                    <strong><i class="fa fa-user margin-r-5"></i> Usuario</strong>
+                    <p class="text-muted"><?= htmlspecialchars($paciente['usuario']) ?></p><hr>
 
-        <!-- Modal para editar perfil -->
-        <div class="modal fade" id="modalEditarPerfil" tabindex="-1" role="dialog" aria-labelledby="modalEditarPerfilLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form method="post" enctype="multipart/form-data" action="<?= BASE_URL ?>index.php?action=actualizarPerfil">
+                    <!-- === [MODIFICADO] Se añade el documento de identidad === -->
+                    <strong><i class="fa fa-id-card-o margin-r-5"></i> Documento de Identidad</strong>
+                    <p class="text-muted">
+                        <?= htmlspecialchars(($paciente['tipo_documento'] ?? '') . ' ' . ($paciente['numero_documento'] ?? 'No registrado')) ?>
+                        <br>
+                        <small>Para modificar este dato, por favor contacte a la administracion .</small>
+                    </p><hr>
 
-                <!-- Agregar este hidden input aquí 👇 -->
-                <input type="hidden" name="actualizarPerfilPaciente" value="ok">
-
-                <div class="modal-header bg-primary">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="modalEditarPerfilLabel">Editar Perfil</h4>
+                    <strong><i class="fa fa-envelope margin-r-5"></i> Correo Electrónico</strong>
+                    <p class="text-muted"><?= !empty($paciente['correo']) ? htmlspecialchars($paciente['correo']) : 'No registrado' ?></p><hr>
+                    <strong><i class="fa fa-phone margin-r-5"></i> Teléfono</strong>
+                    <p class="text-muted"><?= !empty($paciente['telefono']) ? htmlspecialchars($paciente['telefono']) : 'No registrado' ?></p><hr>
+                    <strong><i class="fa fa-map-marker margin-r-5"></i> Dirección</strong>
+                    <p class="text-muted"><?= !empty($paciente['direccion']) ? htmlspecialchars($paciente['direccion']) : 'No registrada' ?></p>
                 </div>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+        <!-- Si la variable $paciente es null, se muestra un mensaje de error claro -->
+        <div class="alert alert-danger"><strong>Error:</strong> No se pudieron cargar los datos del perfil en este momento.</div>
+    <?php endif; ?>
+</section>
 
+<!-- Modal para Editar Perfil del Paciente (solo se renderiza si hay datos de paciente) -->
+<?php if ($paciente): ?>
+<div class="modal fade" id="modalEditarPerfil">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data" action="<?= BASE_URL ?>index.php?url=perfil-Paciente">
+                <div class="modal-header bg-primary"><h4 class="modal-title">Editar Mi Perfil</h4><button type="button" class="close" data-dismiss="modal">×</button></div>
                 <div class="modal-body">
+                    <input type="hidden" name="actualizarPerfilPaciente" value="ok">
                     <input type="hidden" name="idPaciente" value="<?= $paciente['id'] ?>">
                     <input type="hidden" name="fotoActual" value="<?= $paciente['foto'] ?>">
                     <input type="hidden" name="claveActual" value="<?= $paciente['clave'] ?>">
 
-                    <div class="form-group">
-                        <label for="nombreE">Nombre *</label>
-                        <input type="text" class="form-control" id="nombreE" name="nombreE" value="<?= htmlspecialchars($paciente['nombre']) ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="apellidoE">Apellido *</label>
-                        <input type="text" class="form-control" id="apellidoE" name="apellidoE" value="<?= htmlspecialchars($paciente['apellido']) ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="usuarioE">Usuario *</label>
-                        <input type="text" class="form-control" id="usuarioE" name="usuarioE" value="<?= htmlspecialchars($paciente['usuario']) ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="claveE">Nueva Contraseña</label>
-                        <input type="password" class="form-control" id="claveE" name="claveE" placeholder="Dejar en blanco para no cambiar">
-                        <p class="help-block">Mínimo 6 caracteres</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="correoE">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="correoE" name="correoE" value="<?= htmlspecialchars($paciente['correo'] ?? '') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="telefonoE">Teléfono</label>
-                        <input type="text" class="form-control" id="telefonoE" name="telefonoE" value="<?= htmlspecialchars($paciente['telefono'] ?? '') ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="direccionE">Dirección</label>
-                        <textarea class="form-control" id="direccionE" name="direccionE" rows="2"><?= htmlspecialchars($paciente['direccion'] ?? '') ?></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fotoE">Foto de Perfil</label>
-                        <input type="file" class="form-control" id="fotoE" name="fotoE" accept="image/jpeg,image/png">
-                        <p class="help-block">Formatos permitidos: JPG, PNG. Tamaño máximo: 2MB</p>
-                    </div>
+                    <div class="form-group"><label>Nombre *</label><input type="text" class="form-control" name="nombreE" value="<?= htmlspecialchars($paciente['nombre']) ?>" required></div>
+                    <div class="form-group"><label>Apellido *</label><input type="text" class="form-control" name="apellidoE" value="<?= htmlspecialchars($paciente['apellido']) ?>" required></div>
+                    <div class="form-group"><label>Usuario *</label><input type="text" class="form-control" name="usuarioE" value="<?= htmlspecialchars($paciente['usuario']) ?>" required></div>
+                    <div class="form-group"><label>Nueva Contraseña</label><input type="password" class="form-control" name="claveE" placeholder="Dejar en blanco para no cambiar"><p class="help-block">Mínimo 6 caracteres</p></div>
+                    <div class="form-group"><label>Correo</label><input type="email" class="form-control" name="correoE" value="<?= htmlspecialchars($paciente['correo'] ?? '') ?>"></div>
+                    <div class="form-group"><label>Teléfono</label><input type="text" class="form-control" name="telefonoE" value="<?= htmlspecialchars($paciente['telefono'] ?? '') ?>"></div>
+                    <div class="form-group"><label>Dirección</label><textarea class="form-control" name="direccionE" rows="2"><?= htmlspecialchars($paciente['direccion'] ?? '') ?></textarea></div>
+                    <div class="form-group"><label>Foto</label><input type="file" name="fotoE" class="form-control" accept="image/jpeg,image/png"><p class="help-block">Formatos JPG, PNG. Máx 2MB</p></div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
-
             </form>
         </div>
     </div>
 </div>
-
-
-        <!-- Pie de página -->
-        <footer class="main-footer">
-            <div class="pull-right hidden-xs">
-                <b>Versión</b> 1.0.0
-            </div>
-            <strong>Clínica &copy; <?= date('Y') ?>.</strong> Todos los derechos reservados.
-        </footer>
-    </div>
-
-    <!-- JS -->
-    <script src="Vistas/bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="Vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="Vistas/dist/js/adminlte.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Mostrar vista previa de la imagen seleccionada
-            $('#fotoE').change(function() {
-                var input = this;
-                if (input.files && input.files[0]) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        $('.profile-img').attr('src', e.target.result);
-                    }
-                    reader.readAsDataURL(input.files[0]);
-                }
-            });
-
-            // Validación básica del formulario
-            $('form').submit(function(e) {
-                var nombre = $('#nombreE').val().trim();
-                var apellido = $('#apellidoE').val().trim();
-                var usuario = $('#usuarioE').val().trim();
-                var clave = $('#claveE').val();
-                
-                if (nombre === '' || apellido === '' || usuario === '') {
-                    e.preventDefault();
-                    alert('Los campos marcados con * son obligatorios');
-                    return false;
-                }
-                
-                if (clave !== '' && clave.length < 6) {
-                    e.preventDefault();
-                    alert('La contraseña debe tener al menos 6 caracteres');
-                    return false;
-                }
-                
-                // Mostrar indicador de carga
-                $('.modal-footer button[type="submit"]').html('<i class="fa fa-spinner fa-spin"></i> Guardando...').prop('disabled', true);
-            });
-        });
-    </script>
-</body>
-</html>
+<?php endif; ?>

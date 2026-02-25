@@ -1,51 +1,79 @@
 <?php
-// Verificar sesión y permisos
-session_start();
-if (!isset($_SESSION["Ingresar"])) {
-    header("Location: /CLINICA/login");
+// En Vistas/modulos/citas.php
+
+// 1. VERIFICACIÓN DE PERMISOS
+// La sesión ya debe estar iniciada por index.php.
+if (!isset($_SESSION["Ingresar"]) || $_SESSION["rol"] !== "Paciente") {
+    // Si no es un paciente logueado, lo redirigimos a la página de inicio.
+    echo '<script>window.location = "inicio";</script>';
     exit();
 }
 
-// Obtener ID del paciente desde la sesión
+// 2. OBTENCIÓN DE DATOS Y CARGA DE CONTROLADORES
 $id_paciente = $_SESSION["id"];
 
-// Cargar controladores
-require_once $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Controladores/citasC.php';
-require_once $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Controladores/doctoresC.php';
+// Se asume que las clases ya están disponibles a través de un autoloader o un 'loader.php' principal.
+// Si no es el caso, descomentar las siguientes líneas:
+// require_once $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Controladores/citasC.php';
+// require_once $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Controladores/doctoresC.php';
 
 $citasController = new CitasC();
-$doctores = DoctoresC::VerDoctoresC();
 
-// Procesar cancelación de cita
+// 3. PROCESAMIENTO DE ACCIONES (Cancelación de cita)
 if (isset($_GET["cancelar"])) {
-    $resultado_cancelacion = $citasController->CancelarCitaC($_GET["cancelar"]);
-    if (isset($resultado_cancelacion['error'])) {
-        $error_cancelacion = $resultado_cancelacion['error']; // Capturamos el error de cancelación
-    } else {
-        $mensaje_cancelacion = $resultado_cancelacion['success'] ?? 'Cita cancelada correctamente'; // O el mensaje de éxito
+    $id_cita_a_cancelar = filter_input(INPUT_GET, 'cancelar', FILTER_VALIDATE_INT);
+    if ($id_cita_a_cancelar) {
+        $resultado_cancelacion = $citasController->CancelarCitaC($id_cita_a_cancelar, "Cancelada por el paciente");
+        
+        // Guardar el mensaje en la sesión para mostrarlo después de redirigir.
+        if (isset($resultado_cancelacion['error'])) {
+            $_SESSION['mensaje_citas_paciente'] = $resultado_cancelacion['error'];
+            $_SESSION['tipo_mensaje_citas_paciente'] = "danger";
+        } else {
+            $_SESSION['mensaje_citas_paciente'] = $resultado_cancelacion['success'] ?? 'Cita cancelada correctamente';
+            $_SESSION['tipo_mensaje_citas_paciente'] = "success";
+        }
     }
-    header("Location: citas"); // o $_SERVER['PHP_SELF']
+    // Redirigir a la misma página sin el parámetro para evitar re-cancelaciones al recargar.
+    echo '<script>window.location = "citas";</script>';
     exit();
 }
 
-// Obtener citas del paciente
+// 4. OBTENCIÓN DE DATOS PARA LA VISTA
 $citas = $citasController->VerCitasPacienteC($id_paciente);
 
-// Filtrar citas
+// --- MEJORA: Crear lista de doctores que han atendido al paciente ---
+$doctores_paciente = [];
+$ids_doctores_vistos = []; // Array auxiliar para evitar duplicados.
+foreach ($citas as $cita) {
+    $id_doctor_cita = $cita['id_doctor'];
+    // Si el doctor no ha sido añadido a la lista, se agrega.
+    if (!in_array($id_doctor_cita, $ids_doctores_vistos)) {
+        $doctores_paciente[] = [
+            'id' => $id_doctor_cita,
+            'nombre_completo' => $cita['nombre_doctor'] // Se usa el nombre que ya viene en la consulta de citas.
+        ];
+        $ids_doctores_vistos[] = $id_doctor_cita;
+    }
+}
+
+// 5. APLICAR FILTROS DE BÚSQUEDA
 $filtro_doctor = $_GET['doctor'] ?? '';
 $filtro_fecha = $_GET['fecha'] ?? '';
 
-// Clasificar citas
+// 6. CLASIFICACIÓN DE CITAS (PRÓXIMAS VS. PASADAS)
 $citas_pasadas = [];
 $citas_proximas = [];
-$ahora = date('Y-m-d H:i:s');
+$ahora = new DateTime();
 
 foreach ($citas as $cita) {
-    $es_filtro_doctor = empty($filtro_doctor) || $cita['id_doctor'] == $filtro_doctor;
-    $es_filtro_fecha = empty($filtro_fecha) || strpos($cita['inicio'], $filtro_fecha) !== false;
+    // Comprobar si la cita coincide con los filtros seleccionados.
+    $pasa_filtro_doctor = empty($filtro_doctor) || $cita['id_doctor'] == $filtro_doctor;
+    $pasa_filtro_fecha = empty($filtro_fecha) || date('Y-m-d', strtotime($cita['inicio'])) == $filtro_fecha;
 
-    if ($es_filtro_doctor && $es_filtro_fecha) {
-        if ($cita['inicio'] < $ahora) {
+    if ($pasa_filtro_doctor && $pasa_filtro_fecha) {
+        $fecha_cita = new DateTime($cita['inicio']);
+        if ($fecha_cita < $ahora) {
             $citas_pasadas[] = $cita;
         } else {
             $citas_proximas[] = $cita;
@@ -53,152 +81,149 @@ foreach ($citas as $cita) {
     }
 }
 
-// Función para mostrar estados con colores
+// 7. FUNCIÓN HELPER para etiquetas de estado
 function etiquetaEstado($estado) {
-    switch ($estado) {
-        case 'Completada': return '<span class="label label-success">Completada</span>';
-        case 'Pendiente': return '<span class="label label-warning">Pendiente</span>';
-        case 'Cancelada': return '<span class="label label-danger">Cancelada</span>';
-        default: return '<span class="label label-default">' . htmlspecialchars($estado) . '</span>';
-    }
+    $clases = ["Pendiente" => "label-warning", "Completada" => "label-success", "Cancelada" => "label-danger"];
+    return "<span class='label " . ($clases[$estado] ?? "label-default") . "'>" . htmlspecialchars($estado) . "</span>";
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Mis Citas</title>
-    <link rel="stylesheet" href="/CLINICA/Vistas/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="hold-transition skin-blue sidebar-mini">
-<div class="wrapper">
+<!-- El módulo ahora solo contiene las secciones que van DENTRO del <div class="content-wrapper"> -->
+
+<section class="content-header">
+    <h1>Mis Citas</h1>
+    <ol class="breadcrumb">
+        <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+        <li class="active">Mis Citas</li>
+    </ol>
+</section>
+
+<section class="content">
+    
+    <!-- Mostrar mensajes de error o éxito desde la sesión -->
+    <?php if (isset($_SESSION['mensaje_citas_paciente'])): ?>
+        <div class="alert alert-<?= htmlspecialchars($_SESSION['tipo_mensaje_citas_paciente']) ?> alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <?= htmlspecialchars($_SESSION['mensaje_citas_paciente']) ?>
+        </div>
     <?php 
-    include $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Vistas/modulos/cabecera.php';
-    include $_SERVER["DOCUMENT_ROOT"] . '/CLINICA/Vistas/modulos/menuPaciente.php';
+        // Limpiar los mensajes después de mostrarlos para que no reaparezcan.
+        unset($_SESSION['mensaje_citas_paciente'], $_SESSION['tipo_mensaje_citas_paciente']); 
+    endif; 
     ?>
 
-    <div class="content-wrapper">
-        <section class="content">
-            <h3>Mis Citas</h3>
-
-            <!-- Mostrar mensajes de error o éxito -->
-            <?php if (isset($error_cancelacion)): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($error_cancelacion) ?></div>
-            <?php elseif (isset($mensaje_cancelacion)): ?>
-                <div class="alert alert-success"><?= htmlspecialchars($mensaje_cancelacion) ?></div>
-            <?php endif; ?>
-
-            <!-- Filtros -->
-            <form method="get" class="form-inline" style="margin-bottom: 20px;">
-                <label for="doctor">Doctor:</label>
-                <select name="doctor" id="doctor" class="form-control" style="margin: 0 10px;">
-                    <option value="">Todos</option>
-                    <?php foreach ($doctores as $doc): ?>
-                        <option value="<?= $doc['id'] ?>" <?= ($filtro_doctor == $doc['id']) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($doc['nombre']) ?> (<?= htmlspecialchars($doc['tratamientos']) ?>)
-
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-
-                <label for="fecha">Fecha:</label>
-                <input type="date" name="fecha" id="fecha" class="form-control" value="<?= htmlspecialchars($filtro_fecha) ?>" style="margin: 0 10px;">
-
+    <!-- Filtros de búsqueda -->
+    <div class="box box-default">
+        <div class="box-body">
+            <form method="get" class="form-inline">
+                <div class="form-group">
+                    <label for="doctor">Doctor:</label>
+                    <select name="doctor" id="doctor" class="form-control" style="margin: 0 10px;">
+                        <option value="">Todos</option>
+                        <!-- ¡MEJORADO! Se itera sobre la lista de doctores filtrada. -->
+                        <?php foreach ($doctores_paciente as $doc): ?>
+                            <option value="<?= $doc['id'] ?>" <?= ($filtro_doctor == $doc['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($doc['nombre_completo']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fecha">Fecha:</label>
+                    <input type="date" name="fecha" id="fecha" class="form-control" value="<?= htmlspecialchars($filtro_fecha) ?>" style="margin: 0 10px;">
+                </div>
                 <button type="submit" class="btn btn-primary">Filtrar</button>
-                <a href="historial" class="btn btn-default">Limpiar</a>
+                <a href="citas" class="btn btn-default">Limpiar Filtros</a>
             </form>
-
-            <!-- Próximas Citas -->
-            <div class="box box-success">
-                <div class="box-header with-border">
-                    <h4 class="box-title">Citas Próximas</h4>
-                </div>
-                <div class="box-body">
-                    <?php if (empty($citas_proximas)): ?>
-                        <div class="alert alert-info">No hay citas próximas.</div>
-                    <?php else: ?>
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Doctor</th>
-                                    <th>Tratamientos</th>
-                                    <th>Consultorio</th>
-                                    <th>Motivo</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($citas_proximas as $cita): ?>
-                                    <tr>
-                                        <td><?= date("d/m/Y H:i", strtotime($cita["inicio"])) ?></td>
-                                        <td><?= htmlspecialchars($cita["nombre_doctor"]) ?></td>
-                                        <td><?= htmlspecialchars($cita["tratamientos"] ?? 'No especificado') ?></td>
-                                        <td><?= htmlspecialchars($cita["nombre_consultorio"] ?? 'No asignado') ?></td>
-                                        <td><?= htmlspecialchars($cita["motivo"]) ?></td>
-                                        <td><?= etiquetaEstado($cita["estado"]) ?></td>
-                                        <td>
-                                            <?php if ($cita["estado"] == "Pendiente"): ?>
-                                                <a href="?cancelar=<?= $cita['id'] ?>" class="btn btn-danger btn-xs" 
-                                                   onclick="return confirm('¿Estás seguro de cancelar esta cita?')">
-                                                    Cancelar
-                                                </a>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Historial de Citas -->
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h4 class="box-title">Historial de Citas</h4>
-                </div>
-                <div class="box-body">
-                    <?php if (empty($citas_pasadas)): ?>
-                        <div class="alert alert-info">No hay citas pasadas.</div>
-                    <?php else: ?>
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Doctor</th>
-                                    <th>Tratamientos</th>
-                                    <th>Consultorio</th>
-                                    <th>Motivo</th>
-                                    <th>Observaciones</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($citas_pasadas as $cita): ?>
-                                    <tr>
-                                        <td><?= date("d/m/Y H:i", strtotime($cita["inicio"])) ?></td>
-                                        <td><?= htmlspecialchars($cita["nombre_doctor"]) ?></td>
-                                        <td><?= htmlspecialchars($cita["tratamientos"] ?? 'No especificado') ?></td>
-                                        <td><?= htmlspecialchars($cita["nombre_consultorio"] ?? 'No asignado') ?></td>
-                                        <td><?= htmlspecialchars($cita["motivo"]) ?></td>
-                                        <td><?= htmlspecialchars($cita["observaciones"]) ?></td>
-                                        <td><?= etiquetaEstado($cita["estado"]) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </section>
+        </div>
     </div>
-</div>
 
-<script src="/CLINICA/Vistas/bower_components/jquery/dist/jquery.min.js"></script>
-<script src="/CLINICA/Vistas/dist/js/adminlte.min.js"></script>
-</body>
-</html>
+    <!-- Tabla de Próximas Citas -->
+    <div class="box box-success">
+        <div class="box-header with-border"><h3 class="box-title">Citas Próximas</h3></div>
+        <div class="box-body table-responsive">
+            <?php if (empty($citas_proximas)): ?>
+                <div class="alert alert-info">No tienes citas próximas que coincidan con los filtros seleccionados.</div>
+            <?php else: ?>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th><th>Doctor</th><th>Consultorio</th><th>Motivo</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($citas_proximas as $cita): ?>
+                            <tr>
+                                <td><?= date("d/m/Y H:i", strtotime($cita["inicio"])) ?></td>
+                                <td><?= htmlspecialchars($cita["nombre_doctor"]) ?></td>
+                                <td><?= htmlspecialchars($cita["nombre_consultorio"] ?? 'No asignado') ?></td>
+                                <td><?= htmlspecialchars($cita["motivo"]) ?></td>
+                                <td><?= etiquetaEstado($cita["estado"]) ?></td>
+                                <td>
+                                    <?php if ($cita["estado"] == "Pendiente"): ?>
+                                        <a href="citas?cancelar=<?= $cita['id'] ?>" class="btn btn-danger btn-xs" 
+                                           onclick="return confirm('¿Estás seguro de que deseas cancelar esta cita?')">
+                                            Cancelar
+                                        </a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Tabla de Historial de Citas -->
+    <div class="box box-primary">
+        <div class="box-header with-border"><h3 class="box-title">Historial de Citas</h3></div>
+        <div class="box-body table-responsive">
+            <?php if (empty($citas_pasadas)): ?>
+                <div class="alert alert-info">No tienes citas pasadas que coincidan con los filtros seleccionados.</div>
+            <?php else: ?>
+                <table class="table table-bordered table-striped dt-responsive" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th><th>Doctor</th><th>Consultorio</th><th>Motivo</th><th>Diagnóstico/Observaciones</th><th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($citas_pasadas as $cita): ?>
+                            <tr>
+                                <td><?= date("d/m/Y H:i", strtotime($cita["inicio"])) ?></td>
+                                <td><?= htmlspecialchars($cita["nombre_doctor"]) ?></td>
+                                <td><?= htmlspecialchars($cita["nombre_consultorio"] ?? 'No asignado') ?></td>
+                                <td><?= htmlspecialchars($cita["motivo"]) ?></td>
+                                <td><?= nl2br(htmlspecialchars($cita["observaciones"] ?? 'N/A')) ?></td>
+                                <td><?= etiquetaEstado($cita["estado"]) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
+<?php
+// Capturar el JavaScript para inyectarlo en el footer de la plantilla principal (index.php)
+ob_start();
+?>
+<script>
+$(function() {
+    // Inicializar DataTables en la tabla de historial para que tenga paginación y búsqueda.
+    $('.dt-responsive').DataTable({
+        "language": {
+            "url": "<?= BASE_URL ?>Vistas/plugins/datatables/Spanish.json"
+        },
+        "responsive": true,
+        "autoWidth": false,
+        "order": [[ 0, "desc" ]] // Ordenar por fecha descendente por defecto.
+    });
+});
+</script>
+<?php
+// Guardar el script en una variable que tu index.php debe imprimir en el footer.
+$scriptDinamico = ob_get_clean();
+?>

@@ -1,86 +1,72 @@
 <?php
-declare(strict_types=1);
-ini_set('error_log', __DIR__ . '/php_errors.log');
+// En Controladores/LoginC.php (VERSIÓN FINAL Y COMPLETA)
 
-// Iniciar sesión
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// No se necesita require_once aquí porque el loader.php, cargado por index.php,
+// se encarga de encontrar la clase LoginM cuando se necesite.
 
-// Validar método
-if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: ../Vistas/plantilla.php?error=3");
-    exit();
-}
+class LoginC
+{
+    /**
+     * Procesa el intento de inicio de sesión del usuario.
+     */
+    public function procesarLogin()
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            return;
+        }
 
-// Obtener campos del formulario
-$usuario = $_POST['usuario-Ing'] ?? '';
-$clave = $_POST['clave-Ing'] ?? '';
+        $usuario_ingresado = $_POST['usuario-Ing'] ?? '';
+        $clave_ingresada = $_POST['clave-Ing'] ?? '';
 
-if (empty($usuario) || empty($clave)) {
-    header("Location: ../Vistas/plantilla.php?error=2");
-    exit();
-}
+        if (empty($usuario_ingresado) || empty($clave_ingresada)) {
+            $this->redireccionarConError('2');
+        }
 
-// Incluir modelo de login
-require_once "../Modelos/loginM.php";
+        $datosUsuario = LoginM::ObtenerUsuarioPorUsername($usuario_ingresado);
 
-// Consultar al modelo
-$resultado = LoginM::VerificarUsuario($usuario, $clave);
-if (!$resultado) {
-    error_log("⚠️ Login falló - No se encontraron datos para el usuario '$usuario' con esa clave.");
-    sleep(1);
-    header("Location: ../Vistas/plantilla.php?error=1");
-    exit();
+        if ($datosUsuario && password_verify($clave_ingresada, $datosUsuario['clave'])) {
+            $this->crearSesionUsuario($datosUsuario);
+            header("Location: " . BASE_URL . "inicio");
+            exit();
+        } else {
+            $this->redireccionarConError('1');
+        }
+    }
+
+    /**
+     * Crea y establece todas las variables de sesión para el usuario autenticado.
+     */
+    private function crearSesionUsuario(array $datosUsuario)
+    {
+        session_regenerate_id(true);
+
+        $_SESSION["Ingresar"] = true;
+        $_SESSION["id"] = (int)$datosUsuario["id"];
+        $_SESSION["rol"] = $datosUsuario["rol"];
+        $_SESSION["nombre"] = $datosUsuario["nombre"];
+        $_SESSION["apellido"] = $datosUsuario["apellido"];
+        $_SESSION["usuario"] = $datosUsuario["usuario"];
+        $_SESSION["foto"] = $datosUsuario["foto"];
+
+        // ¡CAMBIO CLAVE!
+        // Añadimos el id_consultorio a la sesión.
+        // El '?? null' asegura que si el usuario no es un secretario (y por lo tanto
+        // no tiene este dato), la variable de sesión se cree como nula y no cause un error.
+        if (isset($datosUsuario['rol']) && $datosUsuario['rol'] === 'Secretaria') {
+    $_SESSION["id_consultorio"] = !empty($datosUsuario["id_consultorio"]) ? $datosUsuario["id_consultorio"] : 0;
 } else {
-    error_log("✅ Login exitoso - Resultado:");
-    error_log(print_r($resultado, true));
+    $_SESSION["id_consultorio"] = null; // Otros roles no necesitan consultorio
 }
 
-// Regenerar ID de sesión y guardar datos
-session_regenerate_id(true);
+    }
 
-
-// También guardar los datos en $_SESSION["usuario"] para accesos centralizados
-$_SESSION["usuario"] = [
-    "id" => (int)($resultado["id_usuario"] ?? 0),
-    "nombre" => $resultado["nombre"] ?? '',
-    "rol" => $resultado["rol"] ?? ''
-];
-
-
-// Establecer sesión común
-$_SESSION = [
-    "Ingresar" => true,
-    "rol" => $resultado["rol"] ?? '',
-    "id" => (int)($resultado["id_usuario"] ?? 0),
-    "nombre" => $resultado["nombre"] ?? '',
-    "apellido" => $resultado["apellido"] ?? '',
-    "foto" => $resultado["foto"] ?? '',
-    "__ip" => $_SERVER["REMOTE_ADDR"],
-    "__user_agent" => $_SERVER["HTTP_USER_AGENT"],
-    "__last_activity" => time()
-];
-
-// Guardar ID específico según el rol
-switch (strtolower($resultado["rol"] ?? '')) {
-    case 'doctor':
-        $_SESSION["id_doctor"] = (int)($resultado["id_doctor"] ?? 0);
-        error_log("🩺 ID doctor guardado en sesión: " . $_SESSION["id_doctor"]);
-        break;
-    case 'paciente':
-        $_SESSION["id_paciente"] = (int)($resultado["id_paciente"] ?? 0);
-        error_log("👤 ID paciente guardado en sesión: " . $_SESSION["id_paciente"]);
-        break;
-    case 'secretaria':
-        $_SESSION["id_secretaria"] = (int)($resultado["id_secretaria"] ?? 0);
-        error_log("💼 ID secretaria guardado en sesión: " . $_SESSION["id_secretaria"]);
-        break;
-    case 'administrador':
-        $_SESSION["id_admin"] = (int)($resultado["id_admin"] ?? 0);
-        error_log("🛠️ ID admin guardado en sesión: " . $_SESSION["id_admin"]);
-        break;
+    /**
+     * Redirige al usuario a la página de login con un código de error.
+     */
+    private function redireccionarConError(string $codigoError)
+    {
+        sleep(1);
+        header("Location: " . BASE_URL . "index.php?error=" . $codigoError);
+        exit();
+    }
 }
-
-header("Location: /clinica/index.php");
-exit();

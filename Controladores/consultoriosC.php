@@ -1,99 +1,132 @@
 <?php
-require_once __DIR__ . "/../Modelos/consultoriosM.php";
+
 
 class ConsultoriosC {
-    // Crear Consultorio
+
+     public static function VerDirectorioMedicoC() {
+        return ConsultoriosM::ObtenerInformacionCompletaConsultorios();
+    }
+
+     public static function VerHorariosConsultoriosC() {
+        return ConsultoriosM::ObtenerHorariosDeConsultorios();
+    }
+   static public function VerParaAdminC() {
+        return ConsultoriosM::VerConsultoriosParaAdmin();
+    }
     public function CrearConsultorioC() {
-        if (isset($_POST["consultorioN"])) {
-            $datosC = array("nombre" => $_POST["consultorioN"]);
-            $tablaBD = "consultorios";
-            
-            $respuesta = ConsultoriosM::CrearConsultorioM($tablaBD, $datosC);
-            
-            if ($respuesta) {
-                echo '<script>
-                    window.location = "consultorios";
-                </script>';
-            }
+    // Solo el Administrador puede crear sedes
+    if (isset($_POST["crear_consultorio"]) && $_SESSION['rol'] === 'Administrador') {
+        
+        // Recogemos todos los datos del nuevo formulario
+        $datos = [
+            "nombre" => trim($_POST["nombre"]),
+            "direccion" => trim($_POST["direccion"]),
+            "telefono" => trim($_POST["telefono"]),
+            "email" => trim($_POST["email"])
+        ];
+
+        // Validación simple para el nombre
+        if (!empty($datos['nombre'])) {
+            $respuesta = ConsultoriosM::CrearConsultorioM("consultorios", $datos);
+            $_SESSION['mensaje_consultorios'] = $respuesta ? "¡Nueva sede creada correctamente!" : "Error al crear la sede.";
+            $_SESSION['tipo_mensaje_consultorios'] = $respuesta ? "success" : "danger";
+        } else {
+            $_SESSION['mensaje_consultorios'] = "Error: El nombre de la sede es obligatorio.";
+            $_SESSION['tipo_mensaje_consultorios'] = "danger";
         }
+        
+        echo '<script>window.location = "consultorios";</script>';
+        exit();
     }
+}
 
-    // Ver Consultorios
-    static public function VerConsultoriosC($columna, $valor) {
-        $tablaBD = "consultorios";
-        return ConsultoriosM::VerConsultoriosM($tablaBD, $columna, $valor);
-    }
-
-    // Ver Consultorios Completos
-    static public function VerConsultoriosCompletosC() {
-        return ConsultoriosM::VerConsultoriosCompletosM();
-    }
-
-    // Borrar Consultorio
-    public function BorrarConsultorioC() {
-        if (isset($_GET["url"]) && $_SESSION["rol"] == "Administrador") {
-            $url = explode('/', $_GET["url"]);
-            if (end($url) == "consultorios" && isset($url[count($url)-2]) && is_numeric($url[count($url)-2])) {
-                $id = $url[count($url)-2];
-                $tablaBD = "consultorios";
-                
-                $respuesta = ConsultoriosM::BorrarConsultorioM($tablaBD, $id);
-                
-                if ($respuesta) {
-                    echo '<script>
-                        window.location = "consultorios";
-                    </script>';
-                }
-            }
-        }
-    }
+public static function VerDirectorioPublicoC() {
     
-
-    public function ObtenerHorariosDoctorC() {
-        if(isset($_POST['id_doctor'])) {
-            $horarios = ConsultoriosM::ObtenerHorariosDoctor($_POST['id_doctor']);
-            echo json_encode($horarios);
-        }
-    }
-
-
-    // Cambiar Estado del Consultorio
-    public static function CambiarEstadoConsultorio() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id_consultorio'])) {
-            session_start();
-            
-            if (!isset($_SESSION['id'])) {
-                echo json_encode(['success' => false, 'error' => 'Sesión no iniciada']);
-                exit;
-            }
+    $datos_clinica = InicioM::ObtenerDatosParaDocumentosM(); 
+    $datos_sedes = ConsultoriosM::ObtenerDatosParaDirectorioPublico();
+    return [
+        'clinica' => $datos_clinica,
+        'sedes' => $datos_sedes
+    ];
+}
     
-            $id_consultorio = $_POST['id_consultorio'];
-            $fecha = $_POST['fecha'];
-            $estado = $_POST['estado'];
-            $motivo = $_POST['motivo'] ?? '';
-            $id_usuario = $_SESSION['id'];
-    
-            $resultado = ConsultoriosM::CambiarEstadoManualM(
-                $id_consultorio, 
-                $fecha, 
-                $estado, 
-                $motivo, 
-                $id_usuario
-            );
-    
-            echo json_encode(['success' => $resultado]);
-            exit;
-        }
+public function BorrarConsultorioC($id) {
+  
+    if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'Administrador') {
+        return ['success' => false, 'error' => 'Acción no permitida. Permisos insuficientes.'];
     }
-
-    static public function CambiarEstadoManualC($id_consultorio, $fecha, $estado, $motivo, $id_usuario) {
-        return ConsultoriosM::CambiarEstadoManualM($id_consultorio, $fecha, $estado, $motivo, $id_usuario);
+    if (!is_numeric($id) || $id <= 0) {
+        return ['success' => false, 'error' => 'El ID del consultorio proporcionado no es válido.'];
     }
+    $resultado = ConsultoriosM::BorrarConsultorioM("consultorios", $id);
 
-
+    if ($resultado) {
+        return ['success' => true];
+    } else {
+        return ['success' => false, 'error' => 'No se pudo eliminar la sede. Es posible que tenga doctores, citas u otros registros asociados.'];
+    }
 }
 
 
+static public function VerConsultoriosC($columna, $valor) {
+    $tabla = "consultorios";
+    $respuesta = ConsultoriosM::VerConsultoriosM($tabla, $columna, $valor);
+    return $respuesta;
+}
 
 
-?>
+    static public function ObtenerListaConsultoriosC() {
+        
+        return ConsultoriosM::VerConsultoriosM("consultorios", null, null);
+    }
+
+   public function ActualizarConsultorioC() {
+    if (isset($_POST["editar_consultorio"])) {
+        $id = $_POST["id_consultorio_editar"];
+
+        // Validación de Permisos: Secretario solo puede editar su propia sede
+        if ($_SESSION['rol'] === 'Secretario' && $id != $_SESSION['id_consultorio']) {
+            $_SESSION['mensaje_consultorios'] = "Error: Permiso denegado.";
+            $_SESSION['tipo_mensaje_consultorios'] = "danger";
+            echo '<script>window.location = "consultorios";</script>';
+            exit();
+        }
+
+        // Preparamos el array de datos con los nuevos campos
+        $datos = [
+            "id" => $id,
+            "nombre" => trim($_POST["nombre_editar"]),
+            "direccion" => trim($_POST["direccion_editar"]),
+            "telefono" => trim($_POST["telefono_editar"]),
+            "email" => trim($_POST["email_editar"])
+        ];
+
+        // El Secretario no puede cambiar el nombre, solo el Admin
+        if ($_SESSION['rol'] !== 'Administrador') {
+            unset($datos['nombre']); // Quitamos el nombre del array de datos si es un secretario
+        }
+        
+        $horarios = $_POST["horario"] ?? [];
+
+        if (!empty($id)) {
+            // Actualizamos los datos principales de la sede
+            ConsultoriosM::ActualizarConsultorioM("consultorios", $datos);
+            
+            // Actualizamos los horarios
+            ConsultoriosM::ActualizarHorariosM($id, $horarios);
+
+            $_SESSION['mensaje_consultorios'] = "¡Sede actualizada correctamente!";
+            $_SESSION['tipo_mensaje_consultorios'] = "success";
+        } else {
+            $_SESSION['mensaje_consultorios'] = "Error: El ID no puede estar vacío.";
+            $_SESSION['tipo_mensaje_consultorios'] = "danger";
+        }
+        
+        echo '<script>window.location = "consultorios";</script>';
+        exit();
+    }
+}
+
+
+   
+}
